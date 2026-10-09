@@ -1,0 +1,116 @@
+{
+  "collected_at": "2026-10-09T00:00:00Z",
+  "observations": {
+    "backups": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "age_hours": 12,
+        "restore_verified": true
+      }
+    },
+    "containers": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "complete": true,
+        "host_mounts": false,
+        "privileged": false
+      }
+    },
+    "drift": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "baseline_approved": true,
+        "baseline_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "current_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    "files": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "complete": true,
+        "group_world_writable": false,
+        "root_owned": true
+      }
+    },
+    "kernel": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "advisory_current": true,
+        "patched": true,
+        "reboot_required": false
+      }
+    },
+    "logs": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "audit_active": true,
+        "delivery_verified": true,
+        "persistent_journal": true
+      }
+    },
+    "lsm": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "apparmor_enforcing": false,
+        "host_context": true,
+        "selinux": "enforcing"
+      }
+    },
+    "pam": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "bypass": false,
+        "complete": true
+      }
+    },
+    "patches": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "feed_current": true,
+        "security_updates_pending": 0,
+        "support_active": true
+      }
+    },
+    "ssh": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "effective": true,
+        "password_auth": false,
+        "permit_root": false
+      }
+    },
+    "sudo": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "complete": true,
+        "unrestricted": false
+      }
+    },
+    "systemd": {
+      "source": "synthetic",
+      "state": "observed",
+      "values": {
+        "no_new_privileges": true,
+        "private_tmp": true,
+        "protect_system": true
+      }
+    }
+  },
+  "platform": {
+    "architecture": "x86_64",
+    "family": "ubuntu",
+    "version": "24.04"
+  },
+  "schema_version": 1
+}

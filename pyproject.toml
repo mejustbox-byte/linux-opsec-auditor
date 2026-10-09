@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "linux-opsec-auditor"
+version = "0.1.0a1"
+description = "Bounded read-only Linux posture collection and offline evidence auditing"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{name = "GITHUB-OPSEC contributors"}]
+dependencies = []
+
+[project.scripts]
+linux-opsec-auditor = "linux_opsec_auditor.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+linux_opsec_auditor = ["*.json"]
