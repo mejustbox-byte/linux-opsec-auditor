@@ -20,7 +20,9 @@ def checks():
     version = re.search(r'^version = "([^"]+)"$', (ROOT/'pyproject.toml').read_text(), re.MULTILINE).group(1)
     assert version == __version__, 'Несогласованная версия package'
     assert json.loads((ROOT/'schemas/input-v1.schema.json').read_text()) == INPUT_SCHEMA
-    paths = [ROOT/'pyproject.toml', ROOT/'requirements-build.lock', ROOT/'LICENSE', ROOT/'MANIFEST.in', ROOT/'.gitignore']
+    paths = [ROOT/'pyproject.toml', ROOT/'requirements-build.lock', ROOT/'LICENSE', ROOT/'MANIFEST.in']
+    if (ROOT/'.gitignore').exists():
+        paths.append(ROOT/'.gitignore')
     paths.extend(sorted(ROOT.glob('*.md')))
     for folder in ['src','tests','tools','docs','fixtures','schemas','.github']:
         paths.extend(p for p in (ROOT/folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts)
