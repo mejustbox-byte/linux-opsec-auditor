@@ -77,6 +77,7 @@ permissions and SHA-pinned Actions. CI runner tests are not OS support certifica
 - [Real laboratory protocol and platform matrix](docs/laboratory.md)
 - [Release notes and known gaps](docs/release-notes.md)
 - [Cloud environment setup](docs/environment.md)
+- [Verified release publication](docs/release-workflow.md)
 - [Security reporting](SECURITY.md)
 - [Input JSON Schema](schemas/input-v1.schema.json)
 

@@ -50,3 +50,8 @@ API need api.github.com; artifact upload also needs uploads.github.com. Those tw
 custom domains are in the draft; package-manager presets are preserved. Authentication
 comes from the provided connection; do not extract it, print it, or add credentials
 to configuration. Domain access does not imply authorization; verify actual operations.
+
+Native assets use the manually dispatched, least-privilege Actions publication
+workflow in [release workflow](release-workflow.md). It uses the standard
+GITHUB_TOKEN, verifies the exact original tag/commit and existing release identity,
+and checks downloaded wheel/source/SHA256SUMS before publication. No added credentials.
