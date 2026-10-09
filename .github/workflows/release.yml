@@ -93,11 +93,11 @@ jobs:
           set -euo pipefail
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.type')" = commit
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')" = "$RELEASE_COMMIT"
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > release-before.json
+          gh api "repos/$GITHUB_REPOSITORY/releases/407852654" > release-before.json
           python tools/release_artifacts.py metadata --input release-before.json
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=true --prerelease
           gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --clobber dist/linux_opsec_auditor-0.1.0a1-py3-none-any.whl dist/linux_opsec_auditor-0.1.0a1.tar.gz dist/SHA256SUMS
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > release-uploaded.json
+          gh api "repos/$GITHUB_REPOSITORY/releases/407852654" > release-uploaded.json
           python tools/release_artifacts.py metadata --input release-uploaded.json --require-assets
           mkdir downloaded
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir downloaded --pattern 'linux_opsec_auditor-0.1.0a1*' --pattern SHA256SUMS
@@ -111,6 +111,6 @@ jobs:
           cat downloaded/SHA256SUMS >> release-notes.md
           printf '```\n' >> release-notes.md
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --notes-file release-notes.md
-          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > release-after.json
+          gh api "repos/$GITHUB_REPOSITORY/releases/407852654" > release-after.json
           python tools/release_artifacts.py metadata --input release-after.json --public --require-assets
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')" = "$RELEASE_COMMIT"
