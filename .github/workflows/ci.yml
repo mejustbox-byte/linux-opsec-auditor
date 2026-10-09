@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test-build:
-    name: Python ${{ matrix.python }} synthetic tests and packaging
+    name: Python ${{ matrix.python }} синтетические тесты и сборка
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
@@ -25,16 +25,16 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: ${{ matrix.python }}
-      - name: Install hash-locked build tools
+      - name: Установить сборочные инструменты по хешам
         run: |
           python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-build.lock
-      - name: Run nonempty unit and integration suite and repository checks
+      - name: Выполнить непустой набор тестов и проверки репозитория
         run: PYTHONPATH=src python tools/verify.py
-      - name: Build wheel and source distribution
+      - name: Собрать wheel и исходный архив
         env:
           SOURCE_DATE_EPOCH: '1791504000'
         run: python -m build --no-isolation
-      - name: Install and smoke test wheel outside checkout
+      - name: Проверить установленный wheel вне checkout
         run: python tools/smoke_wheel.py
-      - name: Verify deterministic wheel rebuild
+      - name: Проверить воспроизводимость wheel
         run: python tools/check_reproducible.py

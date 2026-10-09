@@ -18,9 +18,10 @@ from linux_opsec_auditor.schema import INPUT_SCHEMA
 
 def checks():
     version = re.search(r'^version = "([^"]+)"$', (ROOT/'pyproject.toml').read_text(), re.MULTILINE).group(1)
-    assert version == __version__, 'package version mismatch'
+    assert version == __version__, 'Несогласованная версия package'
     assert json.loads((ROOT/'schemas/input-v1.schema.json').read_text()) == INPUT_SCHEMA
-    paths = [ROOT/'README.md', ROOT/'pyproject.toml', ROOT/'requirements-build.lock', ROOT/'SECURITY.md', ROOT/'LICENSE']
+    paths = [ROOT/'pyproject.toml', ROOT/'requirements-build.lock', ROOT/'LICENSE', ROOT/'MANIFEST.in', ROOT/'.gitignore']
+    paths.extend(sorted(ROOT.glob('*.md')))
     for folder in ['src','tests','tools','docs','fixtures','schemas','.github']:
         paths.extend(p for p in (ROOT/folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts)
     # Split literals avoid the scanner matching its own pattern definitions.
@@ -30,7 +31,7 @@ def checks():
                 re.compile('AK' + 'IA[A-Z0-9]{16}')]
     for path in paths:
         data=path.read_text(encoding='utf-8')
-        assert not any(p.search(data) for p in patterns), f'possible secret in {path.relative_to(ROOT)} (value suppressed)'
+        assert not any(p.search(data) for p in patterns), f'Возможный секрет в {path.relative_to(ROOT)} (значение скрыто)'
         if path.suffix == '.py':
             compile(data,str(path),'exec')
             if 'src' in path.parts:
@@ -38,19 +39,20 @@ def checks():
                 for node in ast.walk(tree):
                     if isinstance(node,(ast.Import,ast.ImportFrom)):
                         names=[n.name for n in node.names] if isinstance(node,ast.Import) else [node.module or '']
-                        assert not any(n.split('.')[0] in {'subprocess','socket','requests','urllib','http'} for n in names), 'runtime command/network module forbidden'
+                        assert not any(n.split('.')[0] in {'subprocess','socket','requests','urllib','http'} for n in names), 'Команды/сеть запрещены в runtime'
         if path.suffix == '.md':
+            assert re.search(r'[А-Яа-яЁё]',data), f'документ не содержит русского текста: {path.relative_to(ROOT)}'
             for link in re.findall(r'\[[^\]]+\]\(([^ )]+)\)',data):
                 if '://' in link or link.startswith('#'):
                     continue
-                assert (path.parent/link.split('#')[0]).exists(), f'broken local link in {path.relative_to(ROOT)}'
-    print(f'Repository checks passed ({len(paths)} text files); pattern scan is not an exhaustive secret audit.',flush=True)
+                assert (path.parent/link.split('#')[0]).exists(), f'Неверная внутренняя ссылка в {path.relative_to(ROOT)}'
+    print(f'Проверки репозитория пройдены ({len(paths)} текстовых файлов); проверка паттернов не является исчерпывающим поиском секретов.',flush=True)
 
 
 if __name__ == '__main__':
     checks()
     suite=unittest.defaultTestLoader.discover(str(ROOT/'tests'))
     if suite.countTestCases() == 0:
-        raise SystemExit('No tests collected')
+        raise SystemExit('Тесты не найдены')
     result=unittest.TextTestRunner(verbosity=2).run(suite)
     raise SystemExit(0 if result.wasSuccessful() else 1)

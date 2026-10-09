@@ -1,14 +1,30 @@
-name: Publish verified prerelease assets
+name: Публикация проверенных prerelease assets
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Неизменяемый tag разрешённого prerelease
+        required: true
+        type: choice
+        options: [v0.1.0-alpha.1, v0.1.0-alpha.2]
+        default: v0.1.0-alpha.2
+      expected_commit:
+        description: Полный проверенный commit SHA из main
+        required: true
+        type: string
+      release_id:
+        description: Числовой ID уже созданного release; новый workflow не создаёт
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
-  group: release-v0.1.0-alpha.1
+  group: release-${{ inputs.tag }}
   cancel-in-progress: false
 env:
-  RELEASE_TAG: v0.1.0-alpha.1
-  RELEASE_COMMIT: 70d43abb5bbc5350e7df2ed20e41847bba36938e
+  RELEASE_TAG: ${{ inputs.tag }}
+  RELEASE_COMMIT: ${{ inputs.expected_commit }}
+  RELEASE_ID: ${{ inputs.release_id }}
   SOURCE_DATE_EPOCH: '1791504000'
 jobs:
   build:
@@ -17,51 +33,60 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    defaults:
-      run:
-        working-directory: product
+    outputs:
+      wheel: ${{ steps.identity.outputs.wheel }}
+      source: ${{ steps.identity.outputs.source }}
     steps:
-      - name: Checkout reviewed automation from the dispatch commit
+      - name: Получить проверенную автоматизацию из main
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ github.sha }}
           path: automation
           fetch-depth: 0
           persist-credentials: false
-      - name: Checkout immutable product commit
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          ref: 70d43abb5bbc5350e7df2ed20e41847bba36938e
-          path: product
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Verify exact tag and checked out commit before running product code
-        run: |
-          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
-          test "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" = "$RELEASE_COMMIT"
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.12'
-      - name: Install hash-locked build tools
+      - name: Проверить вход, tag и принадлежность commit истории main
+        id: identity
+        working-directory: automation
         run: |
+          python - <<'PY'
+          import os
+          from tools.release_artifacts import identity
+          version,wheel,source=identity(os.environ['RELEASE_TAG'],os.environ['RELEASE_COMMIT'],int(os.environ['RELEASE_ID']))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:
+              output.write(f'wheel={wheel}\nsource={source}\n')
+          PY
+          test "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")" = "$RELEASE_COMMIT"
+          git merge-base --is-ancestor "$RELEASE_COMMIT" HEAD
+      - name: Получить точный commit продукта после проверки входа
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.expected_commit }}
+          path: product
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Выполнить тесты и собрать точные tagged исходники
+        working-directory: product
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
           python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-build.lock
-      - name: Test and build exact tagged source
-        run: |
           PYTHONPATH=src python tools/verify.py
           python -m build --no-isolation
           python tools/smoke_wheel.py
           python tools/check_reproducible.py
-          python ../automation/tools/release_artifacts.py checksums --directory dist
-          python ../automation/tools/release_artifacts.py verify --directory dist --repo .
-      - name: Transfer verified artifacts within this run
+          python ../automation/tools/release_artifacts.py checksums --directory dist --tag "$RELEASE_TAG"
+          python ../automation/tools/release_artifacts.py verify --directory dist --repo . --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
+      - name: Передать проверенные файлы внутри текущего run
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: verified-v0.1.0-alpha.1
+          name: verified-${{ inputs.tag }}
           if-no-files-found: error
           retention-days: 7
           path: |
-            product/dist/linux_opsec_auditor-0.1.0a1-py3-none-any.whl
-            product/dist/linux_opsec_auditor-0.1.0a1.tar.gz
+            product/dist/${{ steps.identity.outputs.wheel }}
+            product/dist/${{ steps.identity.outputs.source }}
             product/dist/SHA256SUMS
   publish:
     if: github.ref == 'refs/heads/main'
@@ -70,6 +95,9 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+    env:
+      RELEASE_WHEEL: ${{ needs.build.outputs.wheel }}
+      RELEASE_SOURCE: ${{ needs.build.outputs.source }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -81,11 +109,11 @@ jobs:
           python-version: '3.12'
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: verified-v0.1.0-alpha.1
+          name: verified-${{ inputs.tag }}
           path: dist
-      - name: Revalidate transferred artifacts before release writes
-        run: python tools/release_artifacts.py verify --directory dist --repo .
-      - name: Attach to existing release, verify downloads and publish prerelease
+      - name: Повторно проверить source, metadata и license files перед записью release
+        run: python tools/release_artifacts.py verify --directory dist --repo . --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT" --release-id "$RELEASE_ID"
+      - name: Проверить существующий release, прикрепить файлы и опубликовать
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -93,24 +121,23 @@ jobs:
           set -euo pipefail
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.type')" = commit
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')" = "$RELEASE_COMMIT"
-          gh api "repos/$GITHUB_REPOSITORY/releases/407852654" > release-before.json
-          python tools/release_artifacts.py metadata --input release-before.json
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release-before.json
+          python tools/release_artifacts.py metadata --input release-before.json --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT" --release-id "$RELEASE_ID"
           gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=true --prerelease
-          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --clobber dist/linux_opsec_auditor-0.1.0a1-py3-none-any.whl dist/linux_opsec_auditor-0.1.0a1.tar.gz dist/SHA256SUMS
-          gh api "repos/$GITHUB_REPOSITORY/releases/407852654" > release-uploaded.json
-          python tools/release_artifacts.py metadata --input release-uploaded.json --require-assets
+          gh release upload "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --clobber "dist/$RELEASE_WHEEL" "dist/$RELEASE_SOURCE" dist/SHA256SUMS
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release-uploaded.json
+          python tools/release_artifacts.py metadata --input release-uploaded.json --require-assets --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT" --release-id "$RELEASE_ID"
           mkdir downloaded
-          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir downloaded --pattern 'linux_opsec_auditor-0.1.0a1*' --pattern SHA256SUMS
-          python tools/release_artifacts.py verify --directory downloaded --repo .
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir downloaded --pattern "$RELEASE_WHEEL" --pattern "$RELEASE_SOURCE" --pattern SHA256SUMS
+          python tools/release_artifacts.py verify --directory downloaded --repo . --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT"
           cmp dist/SHA256SUMS downloaded/SHA256SUMS
-          printf 'First experimental prerelease. Native wheel/source/SHA256SUMS attachments were built and verified from tag `%s` at commit `%s`.\n\n' "$RELEASE_TAG" "$RELEASE_COMMIT" > release-notes.md
-          printf 'Release workflow: %s/%s/actions/runs/%s\n\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> release-notes.md
-          printf 'Original product PR: %s/%s/pull/1\n\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" >> release-notes.md
+          printf 'Проверенный экспериментальный prerelease. Tag `%s`, точный commit `%s`.\n\n' "$RELEASE_TAG" "$RELEASE_COMMIT" > release-notes.md
+          printf 'Успешные сборка, тесты, license inclusion и проверка скачанных native assets: %s/%s/actions/runs/%s\n\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> release-notes.md
           git show "$RELEASE_COMMIT:docs/release-notes.md" >> release-notes.md
-          printf '\n\nVerified attached checksums:\n```text\n' >> release-notes.md
+          printf '\n\nПроверенные checksum:\n```text\n' >> release-notes.md
           cat downloaded/SHA256SUMS >> release-notes.md
           printf '```\n' >> release-notes.md
-          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --notes-file release-notes.md
-          gh api "repos/$GITHUB_REPOSITORY/releases/407852654" > release-after.json
-          python tools/release_artifacts.py metadata --input release-after.json --public --require-assets
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --title "$RELEASE_TAG — аудитор Linux только на чтение" --notes-file release-notes.md
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release-after.json
+          python tools/release_artifacts.py metadata --input release-after.json --public --require-assets --tag "$RELEASE_TAG" --commit "$RELEASE_COMMIT" --release-id "$RELEASE_ID"
           test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq '.object.sha')" = "$RELEASE_COMMIT"

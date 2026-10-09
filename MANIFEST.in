@@ -8,3 +8,5 @@ recursive-include tests *.py
 recursive-include tools *.py
 recursive-include .github *.yml
 recursive-include tools *.sh
+include *.md
+recursive-include .github *.md

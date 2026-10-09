@@ -1,6 +1,8 @@
 """Install built wheel without dependency resolution and run from outside source tree."""
 from datetime import datetime, timezone
 import json
+import argparse
+import tomllib
 import os
 from pathlib import Path
 import subprocess
@@ -9,7 +11,9 @@ import tempfile
 import venv
 
 ROOT=Path(__file__).resolve().parents[1]
-wheels=list((ROOT/'dist').glob('*.whl'))
+p=argparse.ArgumentParser(); p.add_argument('--dist',default=str(ROOT/'dist')); args=p.parse_args()
+version=tomllib.loads((ROOT/'pyproject.toml').read_text())['project']['version']
+wheels=list(Path(args.dist).glob(f'linux_opsec_auditor-{version}-py3-none-any.whl'))
 assert len(wheels)==1, 'expected exactly one wheel'
 with tempfile.TemporaryDirectory(prefix='opsec-wheel-') as temp:
     path=Path(temp)
@@ -26,4 +30,4 @@ with tempfile.TemporaryDirectory(prefix='opsec-wheel-') as temp:
     assert report['summary']=={'pass':12,'fail':0,'unknown':0,'not_run':0}, report['summary']
     assert report['platform_validation']=='unverified_candidate'
     subprocess.run([str(path/'venv/bin/linux-opsec-auditor'),'--version'],check=True,cwd=temp,env=clean,timeout=15)
-print('Installed wheel CLI smoke passed on synthetic input; no platform validation claimed.')
+print('Smoke установленного wheel прошёл на synthetic input; поддержки платформ это не доказывает.')

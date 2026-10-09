@@ -1,26 +1,27 @@
 # linux-opsec-auditor
 
-GITHUB-OPSEC read-only Linux posture auditing, **0.1.0a1 prerelease**. Evaluate a
-strict normalized evidence snapshot and produce actionable JSON or readable
-findings. A deliberately small local collector reads fixed SSH configuration and
-critical-file metadata; it never runs commands, sudo, remediation or network calls.
+GITHUB-OPSEC: аудит состояния Linux только на чтение, предварительный выпуск
+**0.1.0a2**. CLI проверяет нормализованный JSON-снимок и выдаёт JSON или читаемый
+отчёт с рекомендациями. Ограниченный локальный collector читает фиксированные
+источники SSH и файловых метаданных; команды, sudo, сеть и исправления не используются.
 
-**No Linux platform is validated yet.** Synthetic tests do not validate a real
-kernel, SELinux/AppArmor, systemd, container boundary, logging or backup restoration.
-A `pass` describes only a supplied observation and this limited policy, not host safety.
+**Работа на реальных платформах Linux ещё не подтверждена.** Синтетические тесты
+не проверяют ядро, SELinux/AppArmor, systemd, контейнерную изоляцию, доставку журналов
+или восстановление резервных копий. `pass` относится только к представленным данным
+и ограниченному правилу, а не удостоверяет безопасность сервера.
 
-## Quick start (Python 3.12+ on Linux)
+## Быстрый запуск: Linux и Python 3.12+
 
-From the source checkout, no runtime dependencies or installation are needed:
+Из checkout, без установки и сторонних зависимостей:
 
 ```bash
 PYTHONPATH=src python3 -m linux_opsec_auditor --version
 PYTHONPATH=src python3 -m linux_opsec_auditor audit --input fixtures/unsafe.json --format text
 ```
 
-Exit 1 is expected for a fresh unsafe fixture. All bundled fixtures use the fixed
-synthetic date `2026-10-09T00:00:00Z`; after 24 hours they correctly become unknown.
-For an always-fresh synthetic demo, update only its timestamp in a private copy:
+Для свежей небезопасной фикстуры ожидается exit 1. Дата всех фикстур фиксирована:
+`2026-10-09T00:00:00Z`. После 24 часов результаты становятся `unknown`.
+Для демонстрации обновляйте дату только в приватной копии синтетической фикстуры:
 
 ```bash
 opsec_demo_dir=$(mktemp -d)
@@ -35,51 +36,54 @@ PY
 PYTHONPATH=src python3 -m linux_opsec_auditor audit --input "$opsec_demo_dir/synthetic.json" --format json --fail-on incomplete
 ```
 
-This demo is synthetic. It must not be presented as evidence from a server.
-See [installation and CLI guide](docs/usage.md) for wheel installation, collection,
-exit codes, safe report handling and exact release artifact commands.
+Это синтетическая демонстрация, не свидетельство с реального сервера.
+Подробные команды установки, сбора и обработки результатов — в [инструкции](docs/usage.md).
 
-## Scope
+## Возможности и границы MVP
 
-12 rule families: SSH, sudo, PAM, systemd, critical file permissions, kernel patch
-assertions, LSM, containers, audit/journal, backups, drift and vendor support/patches.
-The local collector implements **only static SSH fragments, four fixed file paths'
-metadata, OS identity and a limited SELinux indicator**. Most rule families require
-operator-normalized input and are unknown when absent. Remote SSH collection,
-PAM/sudo parsing, vendor feeds and runtime service probes are deferred.
+12 групп правил: SSH, sudo, PAM, systemd, файловые права, обновление ядра, LSM,
+контейнерные границы, audit/journal, резервные копии, дрейф и обновления пакетов.
+Локальный collector реализует **только статические фрагменты SSH, метаданные четырёх
+фиксированных файлов, определение ОС и ограниченный индикатор SELinux**. Остальным
+группам нужны нормализованные внешние данные; при их отсутствии результат `unknown`.
+Удалённый SSH, парсеры sudo/PAM, vendor advisories и runtime-проверки служб отложены.
 
-Findings include `pass/fail/unknown/not_run`, stable check ID, severity, limited or
-asserted confidence, whitelisted evidence, rationale, remediation and limitations.
-Unknown versions/architectures do not inherit a pass. No arbitrary strings or raw
-configuration are accepted as evidence. JSON is limited to 1 MiB; unknown fields,
-duplicate keys, invalid types, non-finite numbers and invalid timestamps are rejected.
+Результат содержит `pass/fail/unknown/not_run`, стабильный ID, severity, confidence,
+evidence, объяснение, рекомендацию и ограничения. Неизвестные версии и архитектуры
+не наследуют `pass`. Произвольные строки и сырая конфигурация в evidence запрещены.
+JSON ограничен 1 MiB; лишние поля, повторные ключи, неверные типы, числа вне диапазона
+и некорректные даты отвергаются. Свежесть данных не подтверждает их подлинность.
 
-## Development and validation
+## Разработка и проверка
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install --require-hashes --no-deps --only-binary=:all: -r requirements-build.lock
-PYTHONPATH=src .venv/bin/python tools/verify.py
-SOURCE_DATE_EPOCH=1791504000 .venv/bin/python -m build --no-isolation
-.venv/bin/python tools/smoke_wheel.py
-.venv/bin/python tools/check_reproducible.py
+bash tools/setup_environment.sh
 ```
 
-The build-only lockfile pins wheel hashes. Runtime and tests use the standard library.
-CI executes these commands on Ubuntu runners with Python 3.12/3.13, read-only token
-permissions and SHA-pinned Actions. CI runner tests are not OS support certification.
+Скрипт создаёт `.venv` без зависимости от сохранённого состояния, устанавливает
+сборочные инструменты по версиям и хешам, выполняет непустой набор тестов, собирает
+wheel/sdist, проверяет отдельную установку CLI и воспроизводимость wheel.
+Runtime и тесты используют стандартную библиотеку. CI проверяет Python 3.12/3.13;
+успех на Ubuntu runner не является подтверждением поддержки ОС.
 
-- [Requirements and MVP acceptance](docs/requirements.md)
-- [Threat model](docs/threat-model.md)
-- [Architecture](docs/architecture.md)
-- [ADR-001: Python and evidence-first scope](docs/adr-001.md)
-- [Rule/evidence matrix](docs/check-matrix.md)
-- [Real laboratory protocol and platform matrix](docs/laboratory.md)
-- [Release notes and known gaps](docs/release-notes.md)
-- [Cloud environment setup](docs/environment.md)
-- [Verified release publication](docs/release-workflow.md)
-- [Security reporting](SECURITY.md)
-- [Input JSON Schema](schemas/input-v1.schema.json)
+## Полный индекс документации
 
-No real credentials, raw host configuration, inventory or audit dumps belong in
-this public repository. Please use only synthetic fixtures in issues and PRs.
+| Раздел | Основной документ | Подробности |
+|---|---|---|
+| Назначение, требования и этапы | [ROADMAP](ROADMAP.md) | [Требования](docs/requirements.md) |
+| Компоненты и поток данных | [ARCHITECTURE](ARCHITECTURE.md) | [Архитектура](docs/architecture.md) |
+| Стек и точные зависимости | [TECH-STACK](TECH-STACK.md) | [ADR](docs/adr-001.md) |
+| Установка, обновление, удаление | [INSTALL](INSTALL.md) | [CLI-инструкция](docs/usage.md) |
+| Участие и review | [CONTRIBUTING](CONTRIBUTING.md) | [История изменений](CHANGELOG.md) |
+| Лицензия и следующие циклы | [MIT](LICENSE), [русский перевод](LICENSE.ru.md) | [AGENTS](AGENTS.md) |
+| Безопасность и угрозы | [SECURITY](SECURITY.md), [THREAT-MODEL](THREAT-MODEL.md) | [Полная модель](docs/threat-model.md) |
+| CLI/JSON/library и расширение правил | [CORE-CONTRACT](CORE-CONTRACT.md) | [Schema](schemas/input-v1.schema.json), [матрица](docs/check-matrix.md) |
+| Эксплуатация и ошибки | [RUNBOOK](RUNBOOK.md) | [CLI-инструкция](docs/usage.md) |
+| Облако и восстановление | [CLOUD-DEVELOPMENT](CLOUD-DEVELOPMENT.md) | [Среда](docs/environment.md) |
+| Реальная локальная лаборатория | [LOCAL-PC](LOCAL-PC.md) | [Протокол](docs/laboratory.md) |
+| Проверки и полнота документов | [VERIFICATION](VERIFICATION.md) | [Матрица](docs/check-matrix.md) |
+| Выпуск/tag/assets | [RELEASE-CHECKLIST](RELEASE-CHECKLIST.md) | [Workflow](docs/release-workflow.md) |
+| Примечания к выпуску | [RELEASE-NOTES](RELEASE-NOTES.md) | [Ограничения](docs/release-notes.md) |
+
+Реальные credentials, конфигурация инфраструктуры, инвентари и дампы аудита не должны
+попадать в этот публичный репозиторий. В issues и PR используйте только синтетические данные.

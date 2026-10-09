@@ -1,36 +1,33 @@
-# Threat model
+# Модель угроз
 
-Assets: configuration integrity, host availability, private infrastructure metadata,
-report integrity and operator trust. Actors: legitimate operator, malicious snapshot
-provider, untrusted local filesystem, untrusted PR author and compromised host/root.
+Активы: целостность конфигурации, доступность хоста, приватные метаданные инфраструктуры,
+целостность отчёта и доверие оператора. Участники: оператор, недоверенный поставщик
+снимка, враждебная файловая система, автор недоверенного PR и скомпрометированный root/хост.
 
-Boundaries: local filesystem or operator JSON → strict schema → normalized facts →
-pure rule evaluation → whitelisted evidence → private file or explicitly requested
-stdout. CI inputs are untrusted source; release credentials are separate from tests.
-No remote SSH transport exists in this prerelease.
+Границы: файловая система или JSON → строгая схема → нормализованные факты → правила →
+разрешённое evidence → приватный файл либо явно выбранный stdout. CI принимает
+недоверенный код; право публикации отделено от тестов. SSH transport в MVP отсутствует.
 
-| Threat | Control | Residual / test |
+| Угроза | Защита | Остаточный риск / проверка |
 |---|---|---|
-| Command injection | No subprocess/network runtime imports; only fixed paths | Malicious future collector needs review; AST guard and source review |
-| Malicious JSON | Strict schema, duplicate rejection, 1 MiB cap, type/date/range checks | JSON parsing up to cap costs memory; invalid/recursive tests |
-| FIFO/device/symlink attack | O_PATH validation; component nofollow; reopen verified regular fd via /proc/self/fd | Requires genuine procfs and trusted kernel; filesystem stalls lack hard timeout |
-| File replacement race | Read/stat anchored by descriptors; no symlink following | Untrusted mount/kernel cannot be attested |
-| Output overwrite/permission leak | Owner/private parent, exclusive 0600 creation, nofollow directory descriptors | Operator may later publish stdout/files; privileged process can read them |
-| Secrets in evidence/errors | Closed field vocabulary; generic OS errors; redact digest values | Even boolean posture data is sensitive; keep reports private |
-| Fabricated evidence | Label synthetic/operator as asserted; all platforms unverified | Source field is self-reported, no signature/attestation; a pass is conditional |
-| Stale facts | UTC date validation, 24-hour maximum age, 5-minute future tolerance | Clock and fact truth controlled externally |
-| False confidence | Missing/unsupported/runtime-static facts unknown, limited scope per finding | Normalized inputs cannot validate a full system; manual verification needed |
-| Supply chain | Runtime/test stdlib, exact build wheel hashes, pinned Actions, contents:read | Python/pip/runner remain trust roots; updates need review |
-| Host compromised by root | No claim of independent attestation | Root/kernel can falsify all observations; external trust outside MVP |
-| CI credential exfiltration | No secrets required, no pull_request_target, no publishing CI | Public logs must contain only synthetic data |
+| Инъекция команд | Нет subprocess/сети в runtime; фиксированные пути | Новые collectors требуют ревью; AST-проверка и чтение кода |
+| Вредоносный JSON | Схема, запрет повторов, лимит 1 MiB, типы/даты/диапазоны | Ограниченная нагрузка парсинга; тесты повреждённых и рекурсивных входов |
+| FIFO/устройство/symlink | O_PATH, nofollow по компонентам, чтение проверенного fd через /proc/self/fd | Нужны настоящий procfs и доверенное ядро; жёсткого I/O timeout нет |
+| Подмена файла при чтении | Привязка к fd, а не повторное разрешение имени | Враждебные mount/ядро не аттестуются |
+| Перезапись/утечка отчёта | Владелец и приватность каталога, O_EXCL, nofollow, 0600 | Оператор может позже опубликовать файл/stdout; root может читать |
+| Секреты в evidence/ошибке | Закрытый словарь полей, общие ошибки ОС, скрытые digest | Даже boolean состояния чувствителен; отчёты приватные |
+| Подделка evidence | operator/synthetic помечены asserted; платформы unverified | source не подписан; pass условен и зависит от честности поставщика |
+| Устаревшие факты | UTC, 24 ч, допустимое будущее до 5 мин | Часы и правдивость времени внешние |
+| Ложная уверенность | Недостаток данных, неподдерживаемые версии и static/runtime — unknown | Полной безопасности системы снимок не доказывает |
+| Supply chain | Stdlib runtime/tests, хеши сборки, Actions SHA, ограниченный token | Python/pip/runner — корни доверия; обновления требуют ревью |
+| Компрометация root/ядра | Нет обещания независимой аттестации | Хост может подделать все факты; внешнее доверие вне MVP |
+| Кража прав CI | Нет секретов для тестов, нет pull_request_target; публикация только из main | В логах только синтетические данные; contents:write лишь у job публикации |
 
-Never read private keys, shadow, process environment, full audit/journal records,
-backup contents or cloud credential files. No production fixtures. A fixed mode-bit
-scope does not include ACLs, directory traversal rights, mount options or all files.
-Static SSH findings require review, not blind remediation. LSM enforcement alone is
-not proof of complete confinement. Recovery instructions are recommendations only.
+Не читать private keys, shadow, окружение процессов, полные audit/journal, содержимое
+backup или файлы cloud credentials. Production-фикстуры запрещены. Проверка mode bits
+не включает ACL, права каталогов, mount options и все пути. Статические SSH findings
+требуют ревью, не слепого исправления. LSM enforcement не доказывает полноту confinement.
 
-Privileged execution is unnecessary and discouraged. A manually run root process
-can read more files but this product neither authorizes privilege escalation nor
-promises trusted host evidence. Remote collection will need a separate host-key,
-credential, command allowlist and transport ADR before implementation.
+Привилегированный запуск не нужен и не рекомендуется. Ручной root-запуск не является
+разрешением повысить права и не делает evidence доверенным. Будущий SSH transport
+требует отдельного ADR: host keys, credentials, allowlist команд и модель доверия.

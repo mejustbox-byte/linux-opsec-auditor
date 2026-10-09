@@ -1,56 +1,48 @@
-# Verified release asset publication
+# Проверенная публикация native assets
 
-The user authorized the full implementation/PR/merge/prerelease cycle. Native uploads
-from the cloud task failed with HTTP 401 for uploads.github.com despite working Git/API.
-No new credential was requested and no authentication bypass was attempted.
+Cloud upload вернул 401; новые credentials и обход auth не применялись. Штатный
+Actions GITHUB_TOKEN успешно завершил assets 0.1.0a1. Новый 0.1.0a2 публикуется тем
+же ограниченным процессом, но из нового final main/tag; старый выпуск не перепаковывается.
 
-`.github/workflows/release.yml` uses the standard Actions GITHUB_TOKEN instead. It is
-manual-only (`workflow_dispatch`) from main with no arbitrary tag/commit inputs.
-Hardcoded identity: tag v0.1.0-alpha.1, product commit
-70d43abb5bbc5350e7df2ed20e41847bba36938e, existing release ID 407852654.
-The workflow never creates a new release and never creates, deletes or updates a tag.
+Workflow manual-only из main. Входы: tag из разрешённых v0.1.0-alpha.1/2,
+expected_commit — полный SHA, release_id — ID существующего draft/public release.
+Package версии явно сопоставлены 0.1.0a1/a2. Неверный ввод отвергается до выполнения
+product code; commit должен быть в истории проверенного dispatch main и совпасть с tag.
+Workflow сам не создаёт release и никогда не создаёт/двигает/удаляет tag.
 
-## Trust and permission boundaries
+Build job contents:read: отдельный checkout reviewed automation и exact product,
+hash-locked tools, непустые tests, build, installed-wheel smoke, reproducibility,
+сравнение source/wheel/license с Git. Только три файла передаются SHA-pinned Actions.
+Publish job contents:write: повторная проверка, живой tag, существующий ID/tag/commit,
+перевод этого release в draft при upload, только известные имена при --clobber.
 
-- Build job has contents:read. Reviewed automation is checked out at the dispatch
-  commit; product code is checked out at the exact fixed commit. Tag/HEAD checks run
-  before executing product code. Build tools are hash-locked; product tests, installed
-  CLI smoke and deterministic-wheel checks run on the fixed product tree.
-- Checksums and archive inspection compare wheel/source bytes to the fixed Git tree.
-  Only wheel, source and SHA256SUMS cross jobs through SHA-pinned Actions artifacts.
-- Only the publish job has contents:write. It revalidates transferred bytes, checks
-  the exact existing release ID/tag/commit and checks the live remote tag object.
-  GH_TOKEN is the standard job-scoped github.token, never a new stored credential.
-- Publication puts the same release into draft while updating its three known files.
-  `--clobber` permits retrying known file names only; unexpected existing assets cause
-  failure. No other release or tag is modified.
-- Before publishing, all three files must be uploaded, downloaded back, checksum-
-  checked and compared to the fixed source tree. Only then is the same release made
-  public as a prerelease. The final public/asset/tag state is checked again.
-
-Dispatch after the separate workflow PR is merged and CI passes:
+Затем все три native assets скачиваются обратно: uploaded state/size, SHA256,
+содержимое Git, license bytes и MIT metadata проверяются. Только после успеха тот же
+release становится публичным prerelease с русскими notes. Проверки после публикации
+подтверждают public/assets/tag. Draft читается по числовому ID, не endpoint tag lookup.
 
 ```bash
-gh workflow run release.yml --repo mejustbox-byte/linux-opsec-auditor --ref main
+gh workflow run release.yml --repo mejustbox-byte/linux-opsec-auditor --ref main \
+  -f tag=v0.1.0-alpha.2 -f expected_commit=FULL_MAIN_SHA -f release_id=EXISTING_RELEASE_ID
 gh run list --repo mejustbox-byte/linux-opsec-auditor --workflow release.yml
 ```
 
-A successful workflow run and nonempty uploaded assets are required. An empty release,
-draft, Git fallback branch or successful build-only job is not completed publication.
-A failed upload leaves the same release in draft for safe investigation; rerunning
-only touches the expected files and preserves the tag. No paid infrastructure is used.
+FULL_MAIN_SHA и EXISTING_RELEASE_ID — значения проверенного финального main и
+единственного подготовленного release, не credentials. На повторе использовать тот
+же ID. Не считать build-only success, пустой draft или Git fallback полным выпуском.
+Ошибка оставляет draft для диагностики; tags не меняются. Платные ресурсы не создаются.
 
-## Independent verification
+Независимая проверка после публикации:
 
 ```bash
 opsec_release_dir=$(mktemp -d)
-gh release download v0.1.0-alpha.1 --repo mejustbox-byte/linux-opsec-auditor \
-  --dir "$opsec_release_dir" --pattern 'linux_opsec_auditor-0.1.0a1*' --pattern SHA256SUMS
-python3 tools/release_artifacts.py verify --directory "$opsec_release_dir" --repo .
+gh release download v0.1.0-alpha.2 --repo mejustbox-byte/linux-opsec-auditor \
+  --dir "$opsec_release_dir" --pattern 'linux_opsec_auditor-0.1.0a2*' --pattern SHA256SUMS
+python3 tools/release_artifacts.py verify --directory "$opsec_release_dir" --repo . \
+  --tag v0.1.0-alpha.2 --commit FULL_MAIN_SHA
 ```
 
-Fetch the unchanged tag first if the checkout is shallow. The source sdist must contain
-exact original tagged files (except the unneeded .gitignore); wheel package files
-must equal the tag, with no additional runtime dependencies or unexpected modules.
-The helper is release automation, not part of the tagged initial runtime package.
-Real platform/LSM/kernel/restore verification remains unexecuted; see laboratory.md.
+В shallow checkout сначала получить tag/commit. Wheel не имеет extra modules/runtime
+dependencies; source содержит exact tagged files и допустимые generated metadata.
+Нужно подтвердить LICENSE и LICENSE.ru.md в metadata/bytes. Реальные платформенные
+gates остаются НЕ ВЫПОЛНЕНО — [лаборатория](laboratory.md), полный [checklist](../RELEASE-CHECKLIST.md).

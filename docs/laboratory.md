@@ -1,71 +1,61 @@
-# Real laboratory protocol and candidate platforms
+# Реальная лаборатория и кандидаты платформ
 
-**Not executed in this environment. No platform is validated or supported by a
-stable release yet.** Do not infer real-host behavior from fixtures or containers.
-No paid resources are created. An operator must supply existing disposable VM or
-physical laboratory capacity; absence of that capacity is a release limitation.
+**Эти проверки ещё не выполнены. Ни одна платформа не подтверждена для стабильного
+выпуска.** Фикстуры и контейнеры не доказывают поведение реального хоста. Платные
+ресурсы не создаются; нужны имеющиеся одноразовые VM или физическая лаборатория.
 
-| Distribution | Candidate versions | Distinct validation required |
+| Дистрибутив | Кандидаты | Раздельные доказательства |
 |---|---|---|
-| Ubuntu | 22.04 LTS, 24.04 LTS | GA/HWE kernel, AppArmor enabled/enforcing and disabled cases; ESM separate |
-| Debian | 12, 13 | Security/LTS lifecycle separately; actual AppArmor availability, systemd runtime |
-| RHEL | 9, 10 | Exact minor/kernel and vendor backports, SELinux enforcing/permissive, entitlement |
+| Ubuntu | 22.04 LTS, 24.04 LTS | GA/HWE, AppArmor enforcing/disabled; ESM отдельно |
+| Debian | 12, 13 | Security/LTS отдельно; реальный AppArmor и systemd |
+| RHEL | 9, 10 | Точный minor/kernel, vendor backports, SELinux enforcing/permissive, entitlement |
 
-Initial architecture target x86_64. Aarch64 is unverified and policies produce unknown.
-RHEL clones are not RHEL; separate profiles/evidence would be needed. Ubuntu 26.04,
-RHEL 8 and other releases are outside the MVP candidate matrix. Check current vendor
-lifecycle before promoting any version. CLI Python >=3.12 is a prerequisite distinct
-from distribution support; provision it independently before the audit, not during.
+Начальный target x86_64. Aarch64 непроверен и даёт unknown. RHEL clones не считаются
+RHEL; нужны отдельные профили. Ubuntu 26.04, RHEL 8 и прочие версии вне MVP.
+Перед заявлением поддержки проверьте актуальный vendor lifecycle. Python >=3.12 —
+отдельная предпосылка; подготовьте его заранее, не во время аудита.
 
-## Levels of evidence
+## Уровни доказательств
 
-L0 unit/integration: synthetic normalized JSON and synthetic local filesystem trees.
-Tests can prove evaluator/parser/CLI contracts, not host control effectiveness.
-L1 container userspace: optional future packaging/parser checks; no host kernel,
-LSM, systemd or boundary certification from a distribution image. Not executed here.
-L2 full VM: own kernel, real init, real LSM with separately prepared positive/negative
-states. Required before host-support claims. Not executed here.
-L3 SSH: known_hosts rejection, command allowlist, timeouts and permissions on disposable
-VMs, after transport implementation. Deferred; no SSH transport exists in 0.1.0a1.
+L0: синтетические JSON и файловые деревья; проверяют evaluator/parser/CLI, не защиту хоста.
+L1: контейнерный userspace для packaging/parsers; не подтверждает kernel, LSM,
+systemd и host boundaries. Здесь не выполнен.
+L2: VM с собственными ядром/init/LSM и отдельно подготовленными безопасными/опасными
+состояниями. Обязателен до заявления поддержки; здесь не выполнен.
+L3: SSH known_hosts, allowlist, timeout и права на одноразовой VM после реализации
+transport. В 0.1.0a2 transport отсутствует; этап отложен.
 
-## Reproducible real-host checklist (operator-run, not auditor remediation)
+## Протокол оператора: не исправления аудитора
 
-1. Use a disposable authorized VM with snapshot/recovery and isolated network; no
-production credentials/inventory. Record distro exact minor, image digest, kernel,
-architecture, Python, LSM, namespace and effective UID in a private evidence record.
-2. Install the verified wheel in a preprovisioned environment. Do not ask the auditor
-to install packages or fix host settings. Test configuration states are established
-by a separate operator/provisioner before collection, never by the auditor.
-3. Compare allowed configuration file bytes, owners, modes and ACL metadata before
-and after the audit using an independent read-only mechanism. Compare inventories
-of configuration changes, not all filesystem bytes: atime/audit/journal activity
-from reads and sessions is expected and must be explicitly accounted for.
-4. Run the bounded collection command in the usage guide with an unprivileged UID,
-then offline evaluation with `--fail-on incomplete`. Record expected unknowns for
-nonimplemented sources. Missing sudoers access must not produce a clean result.
-5. Independently inspect sshd effective config for explicit Match/Include contexts
-with administrator-approved read-only validation. Compare with fragment findings;
-Include-containing static input should remain unknown, never an effective pass.
-6. Verify file ownership/mode detections against actual metadata; test denied reads,
-symlink aliases, missing files and ACL-granted write access. ACL cases must remain
-outside collector completeness until ACL collection is implemented.
-7. Independently compare booted kernel against authenticated vendor backport/advisory
-information and installed kernels. No version-string-only patch claims. Normalize
-into a private snapshot only with defensible current facts; authenticity is external.
-8. On Ubuntu/Debian inspect actual AppArmor loaded/enforcing profiles; on RHEL inspect
-SELinux runtime enforcement and policy scope. Container reads must not grant host
-context; local MVP always leaves host_context=false. No active enforcement probe
-that changes audited settings is permitted.
-9. Independently inspect selected systemd properties, container boundary settings,
-audit retention/delivery and external restore evidence. These normalized assertions
-can exercise rules but do not constitute implemented local collectors.
-10. Keep a private record with commit/artifact hash, policy and feed/baseline versions,
-checks run, pass/fail/unknown/not_run counts, limitations and before/after findings.
-Publish only a sanitized synthetic-compatible summary after review; never raw outputs.
-11. Restore/destroy disposable test states and VM snapshots through the lab owner.
-The product itself does not roll back or remediate anything.
+1. Подготовьте разрешённую одноразовую VM, recovery/snapshot и изолированную сеть без
+production credentials. Приватно зафиксируйте distro/minor, image digest, kernel,
+architecture, Python, LSM, namespace и UID.
+2. Установите проверенный wheel в заранее подготовленную среду. Аудитор не устанавливает
+пакеты и не исправляет настройки. Состояния проверки создаёт отдельный provisioner до аудита.
+3. Независимо сравните содержимое/owner/mode/ACL охраняемой конфигурации до/после.
+Не требуйте побитового равенства всей ФС: atime, audit и SSH/sudo журналы могут меняться;
+эти эффекты чтений и сессий учитываются явно.
+4. Выполните ограниченный collect непривилегированным UID, затем audit с --fail-on incomplete.
+Ожидаемые unknown для не реализованных collectors фиксируются; отсутствие доступа
+к sudoers не должно давать чистый pass.
+5. Независимо проверьте effective sshd для согласованных Match/Include контекстов
+разрешённым read-only способом. Сравните с фрагментами; Include остаётся unknown.
+6. Сверьте mode/owner с реальными метаданными; проверьте denied/missing/symlink и
+ACL-granted write. Без ACL collector не подтверждает полноту.
+7. Сопоставьте booted/installed kernel с аутентифицированными vendor advisories/backports.
+Строка версии сама по себе не доказывает исправление. Нормализуйте только обоснованные
+актуальные факты; подлинность внешняя.
+8. Ubuntu/Debian: фактические AppArmor profiles и enforcement; RHEL: SELinux и policy scope.
+Контейнерные чтения не дают host_context; локальный MVP всегда оставляет его false.
+Изменяющие настройки активные LSM-пробы аудитором запрещены.
+9. Независимо проверьте выбранные systemd properties, контейнерные границы, audit
+retention/delivery и restore evidence. Это внешние утверждения, не реализованные collectors.
+10. Приватная запись: commit/artifact hash, policy/feed/baseline versions, выполненные
+проверки и исходы pass/fail/unknown/not_run, ограничения и сравнение до/после.
+Публично — только проверенная обезличенная синтетически совместимая сводка, не raw outputs.
+11. Восстановление/уничтожение VM и тестовых состояний выполняет владелец лаборатории;
+продукт не делает rollback или remediation.
 
-A stable-release gate requires per-version real evidence, negative/denied cases,
-reviewed scope and privacy, measured resource limits and verified dependency trust.
-No claim of 60-second/128-MiB host performance has been established. Network/distributed
-filesystem hangs are an explicit remaining limitation despite input-size bounds.
+Для стабильного выпуска нужны evidence по каждой версии, отрицательные/denied случаи,
+ревью scope/privacy, измерение ресурсов и проверенное доверие к зависимостям.
+Гарантий 60 с/128 MiB ещё нет. Сетевой/распределённый filesystem I/O может зависнуть.

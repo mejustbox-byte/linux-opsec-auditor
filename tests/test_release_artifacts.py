@@ -10,7 +10,7 @@ import unittest
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'tools'))
-from release_artifacts import checksums, verify, verify_release_metadata, VerificationError, COMMIT, TAG, RELEASE_ID, WHEEL, SOURCE, ASSETS
+from release_artifacts import checksums, verify, verify_release_metadata, VerificationError, COMMIT, TAG, RELEASE_ID, WHEEL, SOURCE, ASSETS, identity
 
 
 class ReleaseGuardTest(unittest.TestCase):
@@ -20,7 +20,9 @@ class ReleaseGuardTest(unittest.TestCase):
         self.repo = self.root/'repo'; self.repo.mkdir()
         self.assets = self.root/'assets'; self.assets.mkdir()
         self.files = {'src/linux_opsec_auditor/__init__.py': b'__version__ = "0.1.0a1"\n',
-                      'README.md': b'Synthetic release guard fixture\n', '.gitignore': b'build/\n'}
+                      'README.md': b'Synthetic release guard fixture\n', '.gitignore': b'build/\n',
+                      'LICENSE': b'MIT synthetic license fixture\n',
+                      'pyproject.toml': b'[project]\nversion = "0.1.0a1"\nlicense = "MIT"\n'}
         for name, content in self.files.items():
             path = self.repo/name; path.parent.mkdir(parents=True,exist_ok=True); path.write_bytes(content)
         self.git('init','--initial-branch=main')
@@ -42,7 +44,8 @@ class ReleaseGuardTest(unittest.TestCase):
         with zipfile.ZipFile(self.assets/WHEEL,'w') as wheel:
             wheel.writestr('linux_opsec_auditor/__init__.py',b'wrong source' if changed else self.files['src/linux_opsec_auditor/__init__.py'])
             wheel.writestr('linux_opsec_auditor-0.1.0a1.dist-info/METADATA',
-                           'Metadata-Version: 2.4\nVersion: 0.1.0a1\nRequires-Python: >=3.12\n')
+                           'Metadata-Version: 2.4\nVersion: 0.1.0a1\nRequires-Python: >=3.12\nLicense-Expression: MIT\nLicense-File: LICENSE\n')
+            wheel.writestr('linux_opsec_auditor-0.1.0a1.dist-info/licenses/LICENSE',self.files['LICENSE'])
             if extra:
                 wheel.writestr(extra,b'unexpected fixture')
 
@@ -116,3 +119,17 @@ class ReleaseGuardTest(unittest.TestCase):
             if kind=='duplicate':data['assets'].append(data['assets'][0].copy())
             with self.subTest(kind=kind):
                 with self.assertRaises(VerificationError): verify_release_metadata(data,require_assets=True)
+
+
+class VersionIdentityTest(unittest.TestCase):
+    def test_versions_and_package_names(self):
+        version,wheel,source=identity('v0.1.0-alpha.2','a'*40,123)
+        self.assertEqual(version,'0.1.0a2')
+        self.assertEqual(wheel,'linux_opsec_auditor-0.1.0a2-py3-none-any.whl')
+        self.assertEqual(source,'linux_opsec_auditor-0.1.0a2.tar.gz')
+
+    def test_untrusted_release_inputs_rejected(self):
+        for tag,commit,release_id in [('other','a'*40,1),('v0.1.0-alpha.2','main',1),
+                                     ('v0.1.0-alpha.2','a'*40,0),('v0.1.0-alpha.2','a'*40,True)]:
+            with self.subTest(tag=tag,commit=commit,release_id=release_id):
+                with self.assertRaises(VerificationError):identity(tag,commit,release_id)

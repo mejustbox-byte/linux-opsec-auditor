@@ -30,7 +30,7 @@ class SafeRoot:
     def open(self, relative, flags=os.O_RDONLY):
         parts = relative.split("/")
         if any(part in {"", ".", ".."} for part in parts):
-            raise InputError("path: unsafe path component")
+            raise InputError("path: небезопасный компонент пути")
         parent = os.dup(self.fd)
         try:
             for part in parts[:-1]:
@@ -45,12 +45,12 @@ class SafeRoot:
         fd = self.open(relative, os.O_PATH)
         try:
             if not stat.S_ISREG(os.fstat(fd).st_mode):
-                raise InputError("input: requires a regular file")
+                raise InputError("input: требуется регулярный файл")
             read_fd = os.open(f"/proc/self/fd/{fd}", os.O_RDONLY | os.O_NONBLOCK)
             with os.fdopen(read_fd, "rb") as stream:
                 data = stream.read(limit + 1)
             if len(data) > limit:
-                raise InputError("input: size limit exceeded")
+                raise InputError("input: превышен размер")
             return data
         finally:
             os.close(fd)
@@ -60,7 +60,7 @@ class SafeRoot:
         try:
             info = os.fstat(fd)
             if not stat.S_ISREG(info.st_mode):
-                raise InputError("metadata: requires a regular file")
+                raise InputError("metadata: требуется регулярный файл")
             return info.st_uid, stat.S_IMODE(info.st_mode)
         finally:
             os.close(fd)

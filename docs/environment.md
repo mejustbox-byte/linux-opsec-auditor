@@ -1,29 +1,29 @@
-# Cloud development environment
+# Облачная среда разработки
 
-The repository is the complete setup source; no /workspace/onboarding directory or
-saved virtualenv is required. Tasks are already isolated: use the existing checkout,
-not a new Git worktree unless explicitly requested. Preserve unrelated user changes.
+Checkout содержит всю настройку: внешняя onboarding-директория и сохранённый venv
+не требуются. Задачи уже изолированы; используйте существующий checkout без нового
+Git worktree, если пользователь не попросил его. Сохраняйте посторонние изменения.
 
-## Install / refresh
+## Установка и обновление
 
-From the checkout on a Linux cloud worker with Python 3.12+ and Git:
+Linux worker, Python 3.12+ и Git:
 
 ```bash
 bash tools/setup_environment.sh
 ```
 
-This creates `.venv`, installs build-only wheels from `requirements-build.lock` using
-hash verification, executes the nonempty synthetic unit/integration suite, checks
-repository text/schema/links and secret patterns, builds wheel/sdist, smoke-tests an
-isolated installation, checks deterministic wheel bytes and installs the wheel in
-`.venv`. It never executes a real-host audit or modifies host security settings.
-The script was tested after moving the initially created venv out of the checkout.
-Runtime/tests have no third-party dependencies. Only package-manager downloads need
-pypi.org/files.pythonhosted.org. No credentials or injected secret values are saved.
+Создаётся `.venv`, сборочные wheels ставятся по requirements-build.lock с проверкой
+хешей. Затем непустые unit/integration tests, проверка текста/schema/ссылок/паттернов
+секретов, wheel/sdist, отдельная установка CLI, воспроизводимость wheel и установка
+CLI в `.venv`. Скрипт не запускает аудит реального хоста и не меняет настройки безопасности.
+Сборка использует новый временный каталог, не требует сохранённого venv и не удаляет
+посторонние результаты. Проверка на чистом venv обязательна при изменении настройки.
+Runtime/tests — stdlib. Для сборочных загрузок нужны pypi.org/files.pythonhosted.org.
+Credentials или значения injected secrets в настройке не сохраняются.
 
-## Start / use
+## Начало работы
 
-No service or database needs startup. Commands:
+Службы, daemon и БД не запускаются:
 
 ```bash
 .venv/bin/linux-opsec-auditor --version
@@ -31,27 +31,20 @@ PYTHONPATH=src .venv/bin/python tools/verify.py
 .venv/bin/linux-opsec-auditor schema
 ```
 
-If `.venv` is absent or invalid, rerun setup instead of assuming a snapshot retained
-it. Use [usage](usage.md) for synthetic demos and explicitly authorized laboratory
-collection; never auto-collect private infrastructure during cloud startup.
-All real-host and OS support gates are in [laboratory](laboratory.md).
+Если `.venv` отсутствует/непригоден, повторите setup. [Инструкция](usage.md) содержит
+синтетические примеры и явно разрешённый лабораторный collect. Не собирать production
+данные автоматически при старте. Платформенные ограничения — в [лаборатории](laboratory.md).
 
-## Saved configuration and publication
+## Draft и публикация среды
 
-`install_script` invokes the checkout setup script; `start_skill` points to these
-checkout instructions. The former docs-only restriction is superseded by the user's
-implementation and publishing authorization. A saved draft is separate from runtime
-execution and publishing an environment snapshot. After a new task restores a
-snapshot, rerun readiness checks and verify the checkout/artifacts; live processes
-and credentials are not assumed to persist. There are no services to restore here.
+install_script вызывает checkout setup; start_skill ссылается на эти инструкции.
+Прежнее docs-only ограничение отменено пользователем. Сохранённый draft отличается
+от runtime-выполнения и публикации snapshot. В новой задаче повторно проверьте
+checkout, setup и artifacts; процессы и credentials не считаются сохранёнными.
 
-Git reads/push use the existing platform Git proxy. PR, merge, CI results and release
-API need api.github.com; artifact upload also needs uploads.github.com. Those two
-custom domains are in the draft; package-manager presets are preserved. Authentication
-comes from the provided connection; do not extract it, print it, or add credentials
-to configuration. Domain access does not imply authorization; verify actual operations.
-
-Native assets use the manually dispatched, least-privilege Actions publication
-workflow in [release workflow](release-workflow.md). It uses the standard
-GITHUB_TOKEN, verifies the exact original tag/commit and existing release identity,
-and checks downloaded wheel/source/SHA256SUMS before publication. No added credentials.
+Git читает/публикует через штатный proxy. API PR/merge/CI/release — api.github.com;
+cloud upload — uploads.github.com. Для подробных Actions logs может потребоваться
+results-receiver.actions.githubusercontent.com. Домены сохранены в draft без
+credentials и с сохранением package-manager presets. Разрешённый домен не доказывает
+авторизацию: проверяются реальные операции. Нативные assets публикуются через
+[Actions workflow](release-workflow.md) со штатным GITHUB_TOKEN; новые credentials не нужны.

@@ -1,66 +1,61 @@
-# Architecture
+# Архитектура
 
 ```mermaid
 flowchart LR
-    F[Fixed local read paths] --> C[Bounded collector]
-    O[Operator normalized snapshot] --> S[Strict version 1 schema]
+    F[Фиксированные локальные пути] --> C[Ограниченный collector]
+    O[Нормализованный снимок оператора] --> S[Строгая схема версии 1]
     C --> S
-    S --> E[Pure policy evaluator]
-    E --> J[Whitelisted JSON report]
-    E --> T[Readable report]
-    J --> P[Explicit private output]
+    S --> E[Чистая оценка правил]
+    E --> J[JSON с разрешённым evidence]
+    E --> T[Читаемый отчёт]
+    J --> P[Явно выбранный приватный вывод]
     T --> P
 ```
 
-`schema.py` defines the input schema and a restricted validator for exactly its
-vocabulary. Exported Draft 2020-12 JSON Schema describes structural types; the
-runtime additionally rejects duplicate keys, impossible calendar dates, nonempty
-unavailable/not_run values and oversized files. It is not a generic JSON Schema engine.
-`collector.py` reads fixed paths only, accepts an alternate synthetic root for tests,
-and never invokes commands. `rules.py` is pure; `cli.py` handles selection, exit codes
-and create-only output. Runtime and tests require only Python's standard library.
+`schema.py` определяет входную схему и валидатор именно её словаря, а не универсальный
+движок JSON Schema. Экспорт Draft 2020-12 задаёт структуру; runtime дополнительно
+отвергает повторные ключи, невозможные даты, непустые unavailable/not_run и превышение
+размера. `collector.py` читает фиксированные пути; альтернативный root нужен для
+синтетических тестов. `rules.py` не обращается к хосту; `cli.py` управляет выбором,
+exit codes и приватной записью. Runtime и тесты используют стандартную библиотеку.
 
-## Observation contract
+## Контракт наблюдения
 
-An observation has `state` observed/unavailable/not_run, `source`
-synthetic/operator/static/runtime and a closed set of typed `values`. Fields are
-optional: omission is missing evidence, not a default safe value. `source` is a claim
-made by the input producer, not authenticated provenance. No host identity, raw
-configuration, usernames, paths or arbitrary text are accepted. SHA256 baseline
-facts are accepted only for drift and replaced by equality in the report.
+Наблюдение: state observed/unavailable/not_run, source synthetic/operator/static/runtime
+и закрытый набор типизированных values. Отсутствующее поле — недостаток данных,
+не безопасное значение по умолчанию. source сообщает поставщик: это не подлинность
+и не аттестация. Не принимаются имена хостов/пользователей, сырая конфигурация, пути
+и произвольный текст. SHA256 baseline допустим для drift, но в отчёте остаётся только равенство.
 
-Platform profiles are candidate rule applicability only, never validated support.
-RHEL major profile normalizes a collector's minor version; detailed release and
-kernel provenance belong in private laboratory records. Clones are `other`.
-Aarch64/unknown versions yield unknown. Fact freshness is fixed at 24 h in CLI;
-future timestamps over 5 min are unknown. Clock trust is external.
+Профили платформ задают применимость кандидатов, а не проверенную поддержку. Collector
+сводит RHEL minor к major; точные minor/kernel записываются приватно в лаборатории.
+Клоны — other. Неизвестные версии и aarch64 дают unknown. Свежесть CLI — 24 ч;
+будущее более 5 мин даёт unknown. Доверие к часам внешнее.
 
-## Evaluation semantics
+## Семантика оценки
 
-Always emit 12 findings in stable order. Unselected/not_run groups have empty
-evidence. Unsupported/stale/unavailable groups are unknown before policy evaluation.
-Known unsafe facts can fail even when completeness is absent; a pass requires every
-rule-specific fact and prerequisite. Static SSH values are fragment observations:
-explicit enabling flags are risks for review, not proof of effective sshd state.
-For runtime-oriented groups, static safe facts cannot grant pass. An operator or
-synthetic pass is conditional on the truth/completeness of that asserted snapshot.
-No group is a full compliance standard or host safety certification.
+Всегда 12 findings в стабильном порядке. Unselected/not_run имеют пустое evidence.
+Неподдерживаемые, устаревшие и недоступные данные дают unknown до оценки политики.
+Известный небезопасный факт может дать fail при неполноте; pass требует всех полей
+и предпосылок правила. Статические SSH-флаги — риск для ревью, не доказательство
+эффективной конфигурации sshd. Безопасные static-факты не дают pass для SSH,
+LSM/systemd/logs/kernel/containers. operator/synthetic pass зависит от истинности
+утверждения. Ни одна группа не является полной проверкой compliance или безопасности.
 
-`complete` means no unknown/not_run findings; it does not mean safe. Exit 0 with the
-default threshold can still contain unknown. `--fail-on incomplete` is recommended
-when a pipeline needs complete selected policy evidence. Excluded checks still count
-as incomplete deliberately: selection must not disguise reduced scope.
+complete означает отсутствие unknown/not_run, а не отсутствие fail. Exit 0 при
+пороговом режиме по умолчанию может содержать unknown. `--fail-on incomplete` нужен,
+если pipeline требует полноты evidence. Не выбранные проверки намеренно сохраняют
+неполноту, чтобы скрытое сокращение объёма не выглядело полной проверкой.
 
-## Local I/O
+## Файловый ввод-вывод
 
-Open root and each directory without following symlinks. O_PATH descriptors allow
-validation of regular files before opening for data reads; reopening the anchored
-file uses the process's own procfs fd path. Metadata uses fstat, not file content.
-Output parents must be owned by the effective UID and have no group/world bits;
-creation is O_EXCL, O_NOFOLLOW, 0600. A failed write removes only the file it created
-using the same directory fd. No directory creation or chmod is performed by the CLI.
-The caller chooses a private output directory. Read atime/audit logs may change.
+Root и каждый каталог открываются без symlink. O_PATH позволяет проверить регулярный
+файл до открытия на чтение; повторное чтение привязано к собственному procfs fd.
+Метаданные получаются через fstat без содержимого. Каталог вывода должен принадлежать
+эффективному UID и не иметь group/world bits. Новый файл: O_EXCL, O_NOFOLLOW, 0600.
+Ошибка записи удаляет только созданный файл через тот же fd каталога. CLI не создаёт
+каталоги и не выполняет chmod; приватный каталог выбирает оператор. Возможны atime/журналы.
 
-No persistent daemon, database, shell executor, package-manager mutations, policy
-plugins, transport or remote uploads. Memory/elapsed budgets remain unbenchmarked;
-input size is bounded but kernel/network filesystem I/O can stall.
+Нет daemon, БД, shell executor, package mutations, plugins политик, remote uploads
+или SSH transport. Размер входа ограничен, но I/O ядра/сетевой ФС может зависнуть;
+бюджеты памяти и времени на реальном хосте ещё не измерены.

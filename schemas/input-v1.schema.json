@@ -2,8 +2,10 @@
   "$id": "https://github.com/mejustbox-byte/linux-opsec-auditor/input-v1",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
+  "description": "Закрытая схема утверждений. Не принимает сырую инфраструктуру или секреты; source не является аттестацией.",
   "properties": {
     "collected_at": {
+      "description": "Момент получения данных UTC до секунды; допустимая свежесть 24 ч.",
       "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
       "type": "string"
     },
@@ -12,8 +14,10 @@
       "properties": {
         "backups": {
           "additionalProperties": false,
+          "description": "Возраст backup и внешнее свидетельство восстановления.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -22,6 +26,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -32,11 +37,13 @@
               "additionalProperties": false,
               "properties": {
                 "age_hours": {
+                  "description": "Возраст backup в целых часах; предел политики 24 ч.",
                   "maximum": 1000000,
                   "minimum": 0,
                   "type": "integer"
                 },
                 "restore_verified": {
+                  "description": "Внешнее свидетельство restore; сам аудитор восстановление не выполняет.",
                   "type": "boolean"
                 }
               },
@@ -53,8 +60,10 @@
         },
         "containers": {
           "additionalProperties": false,
+          "description": "Утверждения privileged/host mounts и полнота объёма.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -63,6 +72,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -73,12 +83,15 @@
               "additionalProperties": false,
               "properties": {
                 "complete": {
+                  "description": "Поставщик заявляет полноту ограниченной проверки; схема её не доказывает.",
                   "type": "boolean"
                 },
                 "host_mounts": {
+                  "description": "Заявлены host mounts контейнера.",
                   "type": "boolean"
                 },
                 "privileged": {
+                  "description": "Заявлен privileged контейнер.",
                   "type": "boolean"
                 }
               },
@@ -95,8 +108,10 @@
         },
         "drift": {
           "additionalProperties": false,
+          "description": "Утверждённый baseline и digest нормализованной конфигурации.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -105,6 +120,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -115,13 +131,16 @@
               "additionalProperties": false,
               "properties": {
                 "baseline_approved": {
+                  "description": "Baseline утверждён извне.",
                   "type": "boolean"
                 },
                 "baseline_sha256": {
+                  "description": "SHA256 утверждённого нормализованного baseline.",
                   "pattern": "^[a-f0-9]{64}$",
                   "type": "string"
                 },
                 "current_sha256": {
+                  "description": "SHA256 текущей нормализованной конфигурации; в отчёте остаётся только равенство.",
                   "pattern": "^[a-f0-9]{64}$",
                   "type": "string"
                 }
@@ -139,8 +158,10 @@
         },
         "files": {
           "additionalProperties": false,
+          "description": "Агрегированные mode/owner и полнота файлового объёма.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -149,6 +170,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -159,12 +181,15 @@
               "additionalProperties": false,
               "properties": {
                 "complete": {
+                  "description": "Поставщик заявляет полноту ограниченной проверки; схема её не доказывает.",
                   "type": "boolean"
                 },
                 "group_world_writable": {
+                  "description": "Хотя бы один проверенный файл имеет group/world write mode.",
                   "type": "boolean"
                 },
                 "root_owned": {
+                  "description": "Все проверенные критические файлы принадлежат root.",
                   "type": "boolean"
                 }
               },
@@ -181,8 +206,10 @@
         },
         "kernel": {
           "additionalProperties": false,
+          "description": "Утверждения о patched booted kernel, reboot и актуальности advisories.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -191,6 +218,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -201,12 +229,15 @@
               "additionalProperties": false,
               "properties": {
                 "advisory_current": {
+                  "description": "Заявлена актуальность внешних advisories ядра.",
                   "type": "boolean"
                 },
                 "patched": {
+                  "description": "Заявлено исправленное запущенное ядро.",
                   "type": "boolean"
                 },
                 "reboot_required": {
+                  "description": "Заявлена необходимость перезагрузки для исправлений ядра.",
                   "type": "boolean"
                 }
               },
@@ -223,8 +254,10 @@
         },
         "logs": {
           "additionalProperties": false,
+          "description": "Audit, persistent journal и независимо проверенная доставка.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -233,6 +266,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -243,12 +277,15 @@
               "additionalProperties": false,
               "properties": {
                 "audit_active": {
+                  "description": "Заявлен активный audit.",
                   "type": "boolean"
                 },
                 "delivery_verified": {
+                  "description": "Поставщик независимо проверил доставку журналов.",
                   "type": "boolean"
                 },
                 "persistent_journal": {
+                  "description": "Заявлено постоянное хранение journal.",
                   "type": "boolean"
                 }
               },
@@ -265,8 +302,10 @@
         },
         "lsm": {
           "additionalProperties": false,
+          "description": "SELinux/AppArmor enforcement и установленный host context.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -275,6 +314,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -285,12 +325,15 @@
               "additionalProperties": false,
               "properties": {
                 "apparmor_enforcing": {
+                  "description": "Заявлен enforcing AppArmor.",
                   "type": "boolean"
                 },
                 "host_context": {
+                  "description": "Поставщик установил контекст хоста, не контейнера.",
                   "type": "boolean"
                 },
                 "selinux": {
+                  "description": "Нормализованное состояние SELinux; наличие конфигурации не равно runtime enforcement.",
                   "enum": [
                     "enforcing",
                     "permissive",
@@ -312,8 +355,10 @@
         },
         "pam": {
           "additionalProperties": false,
+          "description": "Утверждение об обходе PAM и полноте service include stack.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -322,6 +367,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -332,9 +378,11 @@
               "additionalProperties": false,
               "properties": {
                 "bypass": {
+                  "description": "Выявлен обход PAM-аутентификации.",
                   "type": "boolean"
                 },
                 "complete": {
+                  "description": "Поставщик заявляет полноту ограниченной проверки; схема её не доказывает.",
                   "type": "boolean"
                 }
               },
@@ -351,8 +399,10 @@
         },
         "patches": {
           "additionalProperties": false,
+          "description": "Vendor support, свежесть advisories и число security updates.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -361,6 +411,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -371,14 +422,17 @@
               "additionalProperties": false,
               "properties": {
                 "feed_current": {
+                  "description": "Заявлена свежесть внешнего feed.",
                   "type": "boolean"
                 },
                 "security_updates_pending": {
+                  "description": "Заявленное число ожидающих security updates.",
                   "maximum": 1000000,
                   "minimum": 0,
                   "type": "integer"
                 },
                 "support_active": {
+                  "description": "Заявлена действующая vendor support/entitlement.",
                   "type": "boolean"
                 }
               },
@@ -395,8 +449,10 @@
         },
         "ssh": {
           "additionalProperties": false,
+          "description": "SSH: явные root/password флаги и подтверждение effective config.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -405,6 +461,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -415,12 +472,15 @@
               "additionalProperties": false,
               "properties": {
                 "effective": {
+                  "description": "Поставщик установил эффективную SSH-конфигурацию нужного контекста.",
                   "type": "boolean"
                 },
                 "password_auth": {
+                  "description": "Разрешена SSH-аутентификация паролем.",
                   "type": "boolean"
                 },
                 "permit_root": {
+                  "description": "Явно разрешён SSH-вход root.",
                   "type": "boolean"
                 }
               },
@@ -437,8 +497,10 @@
         },
         "sudo": {
           "additionalProperties": false,
+          "description": "Нормализованные широкие grants и полнота проверки sudo.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -447,6 +509,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -457,9 +520,11 @@
               "additionalProperties": false,
               "properties": {
                 "complete": {
+                  "description": "Поставщик заявляет полноту ограниченной проверки; схема её не доказывает.",
                   "type": "boolean"
                 },
                 "unrestricted": {
+                  "description": "Выявлено широкое неограниченное разрешение sudo.",
                   "type": "boolean"
                 }
               },
@@ -476,8 +541,10 @@
         },
         "systemd": {
           "additionalProperties": false,
+          "description": "Выбранные защитные свойства конкретной службы.",
           "properties": {
             "source": {
+              "description": "Самодекларированный источник; не подпись и не аттестация.",
               "enum": [
                 "synthetic",
                 "operator",
@@ -486,6 +553,7 @@
               ]
             },
             "state": {
+              "description": "Доступность/выполнение наблюдения; unavailable и not_run требуют пустых values.",
               "enum": [
                 "observed",
                 "unavailable",
@@ -496,12 +564,15 @@
               "additionalProperties": false,
               "properties": {
                 "no_new_privileges": {
+                  "description": "Заявлено NoNewPrivileges службы.",
                   "type": "boolean"
                 },
                 "private_tmp": {
+                  "description": "Заявлен отдельный tmp службы.",
                   "type": "boolean"
                 },
                 "protect_system": {
+                  "description": "Заявлена защита системных путей службы.",
                   "type": "boolean"
                 }
               },
@@ -522,6 +593,7 @@
     },
     "platform": {
       "additionalProperties": false,
+      "description": "Профиль-кандидат, не заявление проверенной поддержки ОС.",
       "properties": {
         "architecture": {
           "enum": [
@@ -551,7 +623,8 @@
       "type": "object"
     },
     "schema_version": {
-      "const": 1
+      "const": 1,
+      "description": "Версия контракта входных данных."
     }
   },
   "required": [
@@ -560,5 +633,6 @@
     "platform",
     "observations"
   ],
+  "title": "Нормализованный снимок Linux OPSEC: версия 1",
   "type": "object"
 }
