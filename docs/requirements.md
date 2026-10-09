@@ -1,9 +1,10 @@
-# Требования и план MVP
+# Product Requirements and MVP
 
-Обновлено 2026-10-09. Пользователь разрешил реализацию, commit, push, PR, слияние и
-prerelease; прежнее ограничение «только документация» отменено. Платные ресурсы,
-реальные credentials и production-дампы запрещены. Документация и пользовательские
-описания — на русском; команды, пути, JSON-ключи и ID сохраняются.
+This document defines the scope, constraints, and acceptance criteria for the
+Linux server security auditor, including supported distributions, read-only
+evidence collection, deterministic findings, private local reports, and
+synthetic validation fixtures.
+
 
 ## Требования
 

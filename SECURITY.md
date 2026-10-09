@@ -62,5 +62,4 @@ contents:write publish job. Проверяются ID/tag/версия, отсу
 отказ доступа/symlink/FIFO/device, no-write synthetic root, приватность/cleanup вывода,
 tampered archives/checksums/tag/asset metadata. История проверок — VERIFICATION.md.
 НЕ ВЫПОЛНЕНО: live OS/kernel/LSM/systemd/container/restore/log delivery/advisory/baseline
-проверки, Windows/WSL2, performance budgets и snapshot restore в новой задаче.
 [Модель угроз](THREAT-MODEL.md) содержит границы и residual risks; полный список — docs/.

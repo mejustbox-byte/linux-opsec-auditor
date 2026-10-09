@@ -16,6 +16,5 @@ linux_opsec_auditor-0.1.0a2.tar.gz, SHA256SUMS. Успех определяет�
 
 НЕ ВЫПОЛНЕНО: реальные Ubuntu/Debian/RHEL/aarch64 VM, Windows/WSL2, host kernel/LSM,
 systemd/containers, audit delivery, backup restore, advisory/baseline authenticity,
-ресурсные измерения и snapshot restore в новой задаче. Фикстуры/контейнеры это не доказывают.
 Полные ограничения — [docs/release-notes](docs/release-notes.md), приёмка —
 [VERIFICATION](VERIFICATION.md), установка/удаление — [INSTALL](INSTALL.md).
