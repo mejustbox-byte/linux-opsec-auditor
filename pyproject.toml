@@ -4,11 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "linux-opsec-auditor"
-version = "0.1.0a1"
-description = "Bounded read-only Linux posture collection and offline evidence auditing"
+version = "0.1.0a2"
+description = "Ограниченный аудит состояния Linux только на чтение и оценка нормализованных данных"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
+license-files = ["LICENSE", "LICENSE.ru.md"]
 authors = [{name = "GITHUB-OPSEC contributors"}]
 dependencies = []
 

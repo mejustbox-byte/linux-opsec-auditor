@@ -1,15 +1,66 @@
-# Security policy
+# Политика безопасности
 
-0.1.0a1 is experimental. No real-host Linux platform support is certified.
-Use only explicitly authorized laboratory hosts; do not treat a result as proof
-against a compromised kernel, complete compliance or reliable backup restoration.
+0.1.0a2 — экспериментальный выпуск. Поддержка реальных платформ Linux не подтверждена.
+Работайте только на явно разрешённых лабораторных хостах. Результат не доказывает
+безопасность скомпрометированного ядра, полный compliance или восстановимость backup.
 
-Never include production dumps, credentials, private keys, users, hostnames, IP
-inventories or raw audit logs in public issues/PRs. Prefer a small synthetic fixture
-and reproducible steps. Use GitHub private vulnerability reporting if it is enabled;
-otherwise contact the repository owner through an available private channel before
-sharing sensitive security details. Do not post a live secret publicly.
+Нельзя публиковать production dumps, credentials, private keys, usernames/hostnames,
+IP-инвентари и сырые audit logs в issues/PR. Приложите минимальную синтетическую
+фикстуру и воспроизводимые шаги. Если включён GitHub private vulnerability reporting,
+используйте его; иначе свяжитесь с владельцем репозитория доступным приватным способом
+до раскрытия чувствительных деталей. Живой секрет публично не размещать.
 
-Runtime scope and residual risks are documented in docs/threat-model.md. Auditing
-must remain read-only: no escalation, network calls, remediation or configuration
-writes. Reports are still sensitive; keep them outside the public checkout.
+Границы и риски описаны в [модели угроз](docs/threat-model.md). Аудит должен оставаться
+read-only: без повышения прав, сети, remediation и конфигурационных записей. Отчёты
+чувствительны; храните их вне публичного checkout. Тесты и release workflow не требуют
+новых реальных credentials; используется штатный ограниченный GITHUB_TOKEN.
+
+## Поддерживаемые prerelease и сообщения
+
+Текущие экспериментальные ветки выпуска — 0.1.0a1 и 0.1.0a2. Сообщение должно
+указывать version/tag, источник установки и минимальное synthetic воспроизведение.
+Исправления выпускаются новой версией; исторические tags не меняются. Стабильной
+платформенной поддержки и обещания срока ответа/SLA нет.
+
+Наличие приватного канала в этом репозитории не подтверждено. Не обещаем несуществующую
+почту, bounty или private reporting. Если GitHub private reporting реально доступен,
+используйте его; иначе публичный issue должен содержать только обезличенное описание
+и synthetic пример, без секрета/эксплойта по живой инфраструктуре. Чувствительные
+детали передавайте только после согласования реально доступного приватного канала
+с владельцем проекта. Проверки на чужой инфраструктуре не разрешаются этим документом.
+
+## Evidence, отчёты и retention
+
+Runtime не читает private keys/shadow/процессное окружение/backup content/полные
+журналы. Вход принимает закрытые типизированные поля. Digest в отчёте скрыт за
+равенством; source не подписан. Все отчёты всё равно приватны: 0700 каталог,
+новый файл 0600, доступ ограничен оператором. Root/скомпрометированная ФС остаются
+вне гарантии. Шифрование диска и backup отчётов продукт не выполняет.
+
+Автоматического удаления/retention daemon нет. До сбора оператор определяет цель,
+кто читает, срок хранения и процедуру удаления приватных snapshots/reports. Свежесть
+24 ч — правило оценки evidence, не автоматический срок удаления. После согласованного
+срока удаляются только собственные report files, не конфигурация хоста. Stdout,
+терминальные журналы и пересылка — явный экспорт; public git/CI artifacts для реального
+evidence запрещены. Baseline/advisory trust и integrity проверяются отдельно.
+
+## Зависимости, лицензии и целостность выпуска
+
+Runtime — stdlib, build-only inventory/версии/хеши и Actions SHA — TECH-STACK.md.
+LICENSE MIT полный стандартный; LICENSE.ru.md поясняет его. Оба включаются в wheel/sdist,
+metadata содержит MIT. Лицензии build dependencies не заменяются MIT проекта.
+Lockfile меняется только с ревью проверенного источника, не для обхода verification.
+
+Release собирается из точного tag/commit после CI, с read-only build job и отдельным
+contents:write publish job. Проверяются ID/tag/версия, отсутствие неожиданных файлов,
+скачанные SHA256, license contents и clean installation. Checksum неподписан и не
+является независимой аттестацией supply chain. Подробно — RELEASE-CHECKLIST.md.
+
+## Security testing и границы
+
+Тестируются malformed/recursive/oversized JSON, типы/даты/duplicate, stale/unknown,
+отказ доступа/symlink/FIFO/device, no-write synthetic root, приватность/cleanup вывода,
+tampered archives/checksums/tag/asset metadata. История проверок — VERIFICATION.md.
+НЕ ВЫПОЛНЕНО: live OS/kernel/LSM/systemd/container/restore/log delivery/advisory/baseline
+проверки, Windows/WSL2, performance budgets и snapshot restore в новой задаче.
+[Модель угроз](THREAT-MODEL.md) содержит границы и residual risks; полный список — docs/.

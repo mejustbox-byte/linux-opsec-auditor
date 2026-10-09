@@ -25,7 +25,7 @@ def write_private(path, text):
             directory = parent.open(str(path.parent)[1:], os.O_RDONLY | os.O_DIRECTORY)
         info = os.fstat(directory)
         if info.st_uid != os.geteuid() or stat.S_IMODE(info.st_mode) & 0o077:
-            raise InputError("output: parent directory must be owned by you with mode 0700")
+            raise InputError("output: каталог должен принадлежать вам и иметь режим 0700")
         fd = os.open(path.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=directory)
         created = True
         with os.fdopen(fd, "w", encoding="utf-8", closefd=False) as stream:
@@ -45,19 +45,19 @@ def write_private(path, text):
 
 
 def parser():
-    p = argparse.ArgumentParser(description="Read-only Linux posture audit; candidate platforms unverified.")
+    p = argparse.ArgumentParser(description="Аудит Linux только на чтение; платформы-кандидаты не проверены.")
     p.add_argument("--version", action="version", version=__version__)
     sub = p.add_subparsers(dest="command", required=True)
-    a = sub.add_parser("audit", help="evaluate a normalized snapshot; no host or network operations")
-    a.add_argument("--input", required=True, help="regular JSON file, at most 1 MiB; no symlinks")
-    a.add_argument("--format", choices=["json", "text"], default="text")
-    a.add_argument("--output", help="new file inside an existing private 0700 directory; otherwise stdout")
-    a.add_argument("--checks", nargs="+", choices=list(RULES), help="groups to select; remaining groups not_run")
-    a.add_argument("--fail-on", choices=["none", "fail", "incomplete"], default="fail")
-    c = sub.add_parser("collect", help="bounded fixed-path local reads; no sudo, no commands, no network")
-    c.add_argument("--output", required=True, help="new snapshot file inside a private 0700 directory")
-    c.add_argument("--root", default="/", help="filesystem root; test roots are not real-host evidence")
-    sub.add_parser("schema", help="print the versioned input JSON Schema")
+    a = sub.add_parser("audit", help="проверить нормализованный снимок без операций с хостом или сетью")
+    a.add_argument("--input", required=True, help="регулярный JSON-файл до 1 MiB; без symlink")
+    a.add_argument("--format", choices=["json", "text"], default="text", help="формат отчёта")
+    a.add_argument("--output", help="новый файл в существующем приватном каталоге 0700; иначе stdout")
+    a.add_argument("--checks", nargs="+", choices=list(RULES), help="выбранные группы; остальные not_run")
+    a.add_argument("--fail-on", choices=["none", "fail", "incomplete"], default="fail", help="порог ненулевого exit code")
+    c = sub.add_parser("collect", help="ограниченное чтение фиксированных локальных путей; без sudo/команд/сети")
+    c.add_argument("--output", required=True, help="новый снимок в приватном каталоге 0700")
+    c.add_argument("--root", default="/", help="root файловой системы; тестовый root не доказывает состояние реального хоста")
+    sub.add_parser("schema", help="показать версионированную JSON Schema входа")
     return p
 
 
@@ -65,7 +65,7 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         if args.command == "schema":
-            print(json.dumps(INPUT_SCHEMA, indent=2, sort_keys=True))
+            print(json.dumps(INPUT_SCHEMA, indent=2, sort_keys=True, ensure_ascii=False))
             return 0
         if args.command == "collect":
             snapshot = collect(args.root)
@@ -75,7 +75,7 @@ def main(argv=None):
             return 0
         snapshot = loads(read_input(args.input))
         report = audit(snapshot, selected=args.checks)
-        text = json.dumps(report, indent=2, sort_keys=True) + "\n" if args.format == "json" else render_text(report)
+        text = json.dumps(report, indent=2, sort_keys=True, ensure_ascii=False) + "\n" if args.format == "json" else render_text(report)
         if args.output:
             write_private(args.output, text)
         else:
@@ -89,6 +89,6 @@ def main(argv=None):
         return 0
     except (OSError, InputError, UnicodeError) as exc:
         # OSError text includes paths and sometimes payloads; suppress it.
-        message = str(exc) if isinstance(exc, InputError) else "file operation failed (check access, regular files and private output directory)"
-        print(f"error: {message}", file=sys.stderr)
+        message = str(exc) if isinstance(exc, InputError) else "ошибка файловой операции (проверьте доступ, регулярный файл и приватный каталог)"
+        print(f"ошибка: {message}", file=sys.stderr)
         return 2

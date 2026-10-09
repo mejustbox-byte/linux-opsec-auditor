@@ -1,44 +1,51 @@
-# v0.1.0-alpha.1 / Python version 0.1.0a1
+# v0.1.0-alpha.2 / package 0.1.0a2
 
-Intended first experimental prerelease. Publication is a separate GitHub operation;
-this file does not assert that a release or a merged PR exists.
+Обновлённый экспериментальный prerelease с русской документацией и пользовательскими
+описаниями. Сам этот файл не доказывает публикацию: нужны успешный workflow,
+публичный prerelease, три загруженных assets и проверенные checksum. Старый выпуск
+v0.1.0-alpha.1 и его tag сохраняются без передвижения.
 
-## Features
+## Возможности
 
-- Strict versioned input schema, duplicate/type/date/range/size validation and safe errors.
-- 12 limited posture rule families with evidence, confidence, severity, remediation
-  and pass/fail/unknown/not_run outcomes; unsupported/stale snapshots unknown.
-- JSON/readable reports, explicit check selection and fail thresholds.
-- Small no-command/no-network/no-sudo collector for fixed SSH configuration,
-  critical-file metadata and a limited SELinux indicator; private create-only output.
-- Synthetic fixtures, nonempty unit and filesystem/CLI integration tests.
-- No third-party runtime dependencies; hash-locked build toolchain, installable wheel
-  and source archive, isolated wheel smoke and same-toolchain wheel reproducibility.
-- SHA-pinned GitHub Actions CI for Python 3.12/3.13 on Ubuntu runners.
+- Строгая схема версии 1: типы/даты/диапазоны/размер, запрет повторных ключей, безопасные ошибки.
+- 12 групп правил: evidence, confidence, severity, remediation, pass/fail/unknown/not_run.
+  Неизвестная платформа и устаревшее evidence дают unknown.
+- JSON и читаемый отчёт, выбор правил и порога неуспеха.
+- Ограниченный collector SSH/метаданных/SELinux без команд, сети, sudo и исправлений;
+  приватный новый файл вместо перезаписи.
+- Синтетические unit, filesystem и CLI integration tests; guards публикации.
+- Нет runtime-зависимостей; hash-locked сборка, wheel/sdist, smoke установленного CLI
+  и воспроизводимость wheel в одной toolchain.
+- SHA-pinned CI Python 3.12/3.13 и Actions публикация с contents:write только у publish job.
+- Русские README, docs, безопасность, участие, CHANGELOG, schema/rule/help описания
+  и сохранённые инструкции среды.
 
-## Validation and limitations
+## Проверка и ограничения
 
-Local synthetic tests and installed-wheel checks are recorded in the delivery
-report. GitHub CI results must be verified separately, never inferred from local tests.
-Real Ubuntu 22.04/24.04, Debian 12/13, RHEL 9/10 VM tests are **not executed**. Aarch64,
-container userspace tests, effective sshd policy, host kernel/backports, actual LSM,
-systemd, container isolation, audit/journal delivery, restore and drift-baseline
-integrity are **not validated**. No paid infrastructure has been created.
+Локальные/CI тесты и packaging не являются тестами инфраструктуры. Реальные VM
+Ubuntu 22.04/24.04, Debian 12/13, RHEL 9/10 **не проверены**. Aarch64, контейнерный
+userspace, effective sshd, kernel/backports, реальный LSM/systemd/container isolation,
+audit/journal delivery, restore и baseline integrity **не подтверждены**.
+Платные ресурсы не создавались.
 
-Most domains require normalized external facts; their collectors are not implemented.
-Input source tags are self-reported and not attested. Local SSH does not expand
-Include/Match, metadata excludes ACLs/parent dirs, LSM host_context is always false.
-No remote SSH transport, package/advisory acquisition, sudo/PAM parser, repair or
-secret collection. Kernel/filesystem stalls lack a hard I/O deadline.
-Only wheel bytes have a reproducibility check; sdist bytes are not claimed reproducible.
-Read effects such as atime/audit logs remain possible; no host settings are changed.
+Большинство collectors не реализованы; нужны внешние нормализованные факты.
+source не подписан. SSH не раскрывает Include/Match, FILE исключает ACL/parents,
+LSM host_context всегда false. Нет remote SSH, vendor feed downloads, парсеров
+sudo/PAM, remediation или сбора секретов. У I/O нет жёсткого timeout.
+Проверена воспроизводимость wheel, но не байтовая воспроизводимость sdist.
+Возможны atime/журналы чтения; настройки хоста не меняются.
 
-## Artifacts and installation
+## Assets и установка
 
-Intended assets: linux_opsec_auditor-0.1.0a1-py3-none-any.whl,
-linux_opsec_auditor-0.1.0a1.tar.gz, SHA256SUMS. Download them together and verify the
-checksums. Install wheel into a Python 3.12+ Linux venv using
-`python -m pip install --no-index --no-deps linux_opsec_auditor-0.1.0a1-py3-none-any.whl`.
-The source archive includes documentation and fixtures. Exact commands and exit
-semantics are in [usage](usage.md); real-host gates are in [laboratory](laboratory.md).
-Checksums are unsigned corruption checks, not independent provenance attestation.
+Ожидаемые native assets: linux_opsec_auditor-0.1.0a2-py3-none-any.whl,
+linux_opsec_auditor-0.1.0a2.tar.gz, SHA256SUMS. Workflow проверяет исходный tag/commit,
+содержимое файлов и скачанные checksum до публикации. Скачать все три и проверить
+sha256sum. Установка в Linux venv с Python 3.12+:
+
+```bash
+python -m pip install --no-index --no-deps linux_opsec_auditor-0.1.0a2-py3-none-any.whl
+```
+
+Исходный архив содержит инструкции и фикстуры. Полные команды и exit codes — в
+[инструкции](usage.md); реальная приёмка — в [лаборатории](laboratory.md).
+Checksum не подписан и не является независимой аттестацией происхождения.

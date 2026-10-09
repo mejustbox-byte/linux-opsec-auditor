@@ -6,50 +6,50 @@ import json
 
 # group: id, title, severity, expected field values, prerequisite, remediation, limitation
 RULES = {
-    "ssh": ("SSH-01", "SSH root/password authentication", "high",
+    "ssh": ("SSH-01", "SSH: вход root и аутентификация паролем", "high",
             {"permit_root": False, "password_auth": False}, "effective",
-            "Review effective SSH policy including Match/Include before disabling root and password login.",
-            "Static fragments cannot prove effective Match/Include policy or authentication safety."),
-    "sudo": ("SUDO-01", "Unrestricted sudo grants", "high", {"unrestricted": False}, "complete",
-             "Review broad grants, NOPASSWD and writable command paths with the administrator.",
-             "A normalized grant summary does not prove command-level privilege safety."),
-    "pam": ("PAM-01", "PAM authentication bypass", "high", {"bypass": False}, "complete",
-            "Review the full service-specific PAM include stack; test recovery access separately.",
-            "No PAM stack parser or login probe is implemented."),
-    "systemd": ("UNIT-01", "Selected service hardening", "medium",
+            "Проверьте эффективную SSH-политику и Match/Include до отключения root/password входа.",
+            "Статический фрагмент не доказывает эффективную Match/Include-политику или безопасность входа."),
+    "sudo": ("SUDO-01", "Неограниченные разрешения sudo", "high", {"unrestricted": False}, "complete",
+             "Совместно с администратором проверьте широкие grants, NOPASSWD и доступные на запись пути команд.",
+             "Нормализованная сводка не доказывает безопасность привилегий отдельных команд."),
+    "pam": ("PAM-01", "Обход аутентификации PAM", "high", {"bypass": False}, "complete",
+            "Проверьте полный PAM include stack конкретной службы; recovery-доступ проверяйте отдельно.",
+            "Парсер PAM stack и проба входа не реализованы."),
+    "systemd": ("UNIT-01", "Выбранные защитные свойства службы", "medium",
                 {"no_new_privileges": True, "protect_system": True, "private_tmp": True}, None,
-                "Assess service-specific sandboxing and compatibility before changes.",
-                "Selected properties do not establish complete service isolation."),
-    "files": ("FILE-01", "Critical file ownership and write permissions", "high",
+                "До изменений оцените совместимость и изоляцию конкретной службы.",
+                "Выбранные свойства не доказывают полную изоляцию службы."),
+    "files": ("FILE-01", "Владельцы и права записи критических файлов", "high",
               {"root_owned": True, "group_world_writable": False}, "complete",
-              "Review owners, modes, ACLs and mount policy for critical configuration.",
-              "Mode bits exclude ACLs, mount effects, directory ownership and paths outside scope."),
-    "kernel": ("KERN-01", "Running kernel patch evidence", "high",
+              "Проверьте владельцев, mode, ACL и mount-политику критической конфигурации.",
+              "Mode bits не учитывают ACL, mount, владельцев каталогов и пути вне объёма проверки."),
+    "kernel": ("KERN-01", "Данные об исправлениях запущенного ядра", "high",
                {"reboot_required": False, "patched": True}, "advisory_current",
-               "Verify vendor backports, running kernel and maintenance/reboot policy.",
-               "No version comparison, advisory download or kernel attestation is performed."),
-    "lsm": ("LSM-01", "Host LSM enforcement", "high", {}, "host_context",
-            "Review host SELinux/AppArmor runtime enforcement with distribution-specific policy.",
-            "Container observations cannot establish host LSM enforcement or policy coverage."),
-    "containers": ("CONT-01", "Container boundary exposure", "high",
+               "Проверьте vendor backports, запущенное ядро и политику обслуживания/перезагрузки.",
+               "Сравнение версий, загрузка advisories и аттестация ядра не выполняются."),
+    "lsm": ("LSM-01", "Применение LSM на хосте", "high", {}, "host_context",
+            "Проверьте runtime SELinux/AppArmor хоста с учётом политики дистрибутива.",
+            "Наблюдение в контейнере не подтверждает host LSM enforcement или полноту политики."),
+    "containers": ("CONT-01", "Опасные контейнерные границы", "high",
                    {"privileged": False, "host_mounts": False}, "complete",
-                   "Review privileged mode, host mounts, sockets, capabilities and user namespaces.",
-                   "Two exposure flags do not establish a complete container boundary."),
-    "logs": ("AUD-01", "Audit and journal evidence", "medium",
+                   "Проверьте privileged mode, host mounts, sockets, capabilities и user namespaces.",
+                   "Два флага не доказывают полноценную контейнерную изоляцию."),
+    "logs": ("AUD-01", "Данные audit и journal", "medium",
              {"audit_active": True, "persistent_journal": True, "delivery_verified": True}, None,
-             "Review audit coverage, persistent journal retention and independently verify delivery.",
-             "Configuration alone does not prove retained logs or remote delivery."),
-    "backups": ("BACK-01", "Backup freshness and restore evidence", "high",
+             "Проверьте audit coverage, retention persistent journal и независимо подтвердите доставку.",
+             "Конфигурация не доказывает сохранность журналов или удалённую доставку."),
+    "backups": ("BACK-01", "Свежесть резервной копии и данные восстановления", "high",
                 {"restore_verified": True}, None,
-                "Review backup freshness and independent isolated restore evidence.",
-                "Restore assertions are not an executed restoration test; fixed freshness budget is 24 h."),
-    "drift": ("DRIFT-01", "Approved configuration baseline", "info", {}, "baseline_approved",
-              "Review differences against the approved baseline; drift is not automatically a vulnerability.",
-              "Digest comparison depends on externally approved normalization and baseline integrity."),
-    "patches": ("PATCH-01", "Security update and support evidence", "high",
+                "Проверьте свежесть backup и независимые данные изолированного восстановления.",
+                "Утверждение не является выполненным restore test; предел свежести — 24 ч."),
+    "drift": ("DRIFT-01", "Утверждённый baseline конфигурации", "info", {}, "baseline_approved",
+              "Проверьте различия с утверждённым baseline; дрейф не равен уязвимости.",
+              "Сравнение digest зависит от внешнего утверждения normalization и целостности baseline."),
+    "patches": ("PATCH-01", "Данные security updates и поддержки", "high",
                 {"support_active": True, "security_updates_pending": 0}, "feed_current",
-                "Review vendor support and current security advisories, including extended support entitlements.",
-                "No live package manager query or vendor entitlement validation is performed."),
+                "Проверьте vendor support и актуальные security advisories, включая entitlement расширенной поддержки.",
+                "Live-запрос package manager и проверка vendor entitlement не выполняются."),
 }
 
 
@@ -57,33 +57,33 @@ def decide(group, values):
     _, _, _, expected, gate, _, _ = RULES[group]
     # Known unsafe evidence remains a failure even when completeness is absent.
     if any(key in values and values[key] != target for key, target in expected.items()):
-        return "fail", "Observed value does not meet the selected policy."
+        return "fail", "Наблюдаемое значение не соответствует выбранной политике."
     if group == "backups":
         if values.get("age_hours", 0) > 24:
-            return "fail", "Backup freshness exceeds the 24-hour policy."
+            return "fail", "Свежесть backup превышает 24-часовой предел."
         if "age_hours" not in values:
-            return "unknown", "Backup freshness was not observed."
+            return "unknown", "Свежесть backup не установлена."
     if group == "lsm":
         if values.get("host_context") is not True:
-            return "unknown", "Host namespace context was not established."
+            return "unknown", "Host namespace context не установлен."
         if values.get("selinux") == "enforcing" or values.get("apparmor_enforcing") is True:
-            return "pass", "An enforcing LSM was reported for host context."
+            return "pass", "Для host context заявлен enforcing LSM."
         if values.get("selinux") in {"disabled", "permissive"} and values.get("apparmor_enforcing") is False:
-            return "fail", "Neither supported LSM was reported enforcing."
-        return "unknown", "LSM enforcement evidence is incomplete."
+            return "fail", "Ни один из рассматриваемых LSM не заявлен enforcing."
+        return "unknown", "Данные LSM enforcement неполны."
     if group == "drift":
         if values.get(gate) is not True:
-            return "unknown", "Baseline approval was not established."
+            return "unknown", "Утверждение baseline не подтверждено."
         if not {"baseline_sha256", "current_sha256"} <= values.keys():
-            return "unknown", "Baseline/current digest is missing."
+            return "unknown", "Отсутствует baseline/current digest."
         if values["baseline_sha256"] != values["current_sha256"]:
-            return "fail", "Configuration digest differs from the approved baseline."
-        return "pass", "Configuration digests agree."
+            return "fail", "Digest конфигурации отличается от утверждённого baseline."
+        return "pass", "Digest конфигурации совпадают."
     if gate and values.get(gate) is not True:
-        return "unknown", "Effective, complete or current evidence is not established."
+        return "unknown", "Эффективность, полнота или актуальность данных не установлена."
     if not expected.keys() <= values.keys():
-        return "unknown", "Required evidence is missing."
-    return "pass", "Observed values meet this limited policy."
+        return "unknown", "Обязательные данные отсутствуют."
+    return "pass", "Наблюдаемые значения соответствуют этой ограниченной политике."
 
 
 def audit(snapshot, selected=None, now=None, max_age_hours=24):
@@ -92,7 +92,7 @@ def audit(snapshot, selected=None, now=None, max_age_hours=24):
     now = now or datetime.now(timezone.utc)
     selected = set(RULES) if selected is None else set(selected)
     if selected - RULES.keys():
-        raise ValueError("unsupported check selection")
+        raise ValueError("неподдерживаемый выбор проверки")
     age = (now - timestamp(snapshot["collected_at"])).total_seconds()
     platform = snapshot["platform"]
     supported = (platform["version"] in PROFILES.get(platform["family"], set())
@@ -110,18 +110,18 @@ def audit(snapshot, selected=None, now=None, max_age_hours=24):
             if digest_a is not None and digest_b is not None:
                 evidence["digests_equal"] = digest_a == digest_b
         if group not in selected or (observation and observation["state"] == "not_run"):
-            status, reason = "not_run", "Check not selected or explicitly not collected."
+            status, reason = "not_run", "Проверка не выбрана либо явно не выполнялась."
             evidence = {}
         elif not supported:
-            status, reason = "unknown", "Platform/version/architecture is outside the candidate policy profiles."
+            status, reason = "unknown", "Платформа/версия/архитектура вне профилей-кандидатов политики."
         elif age < -300 or age > max_age_hours * 3600:
-            status, reason = "unknown", "Evidence is stale or future-dated."
+            status, reason = "unknown", "Данные устарели или датированы будущим."
         elif not observation or observation["state"] != "observed":
-            status, reason = "unknown", "Evidence was unavailable or omitted."
+            status, reason = "unknown", "Данные недоступны или пропущены."
         else:
             status, reason = decide(group, observation["values"])
             if status == "pass" and source == "static" and group in {"ssh", "lsm", "systemd", "logs", "kernel", "containers"}:
-                status, reason = "unknown", "Static evidence cannot establish this runtime property."
+                status, reason = "unknown", "Статические данные не устанавливают это runtime-свойство."
         findings.append({"check_id": check_id, "rule_version": 1, "title": title,
                          "status": status, "severity": severity, "source": source,
                          "confidence": "asserted" if source in {"operator", "synthetic"} else "limited",
@@ -137,12 +137,12 @@ def audit(snapshot, selected=None, now=None, max_age_hours=24):
 
 
 def render_text(report):
-    lines = [f"Linux OPSEC Auditor {report['tool_version']} — candidate platforms UNVERIFIED",
-             "Results apply only to the supplied evidence; not a host safety certification.",
-             "Summary: " + ", ".join(f"{k}={v}" for k, v in report["summary"].items())]
+    lines = [f"Linux OPSEC Auditor {report['tool_version']} — платформы-кандидаты НЕ ПРОВЕРЕНЫ",
+             "Результат относится только к предоставленным данным; это не сертификация безопасности хоста.",
+             "Итоги: " + ", ".join(f"{k}={v}" for k, v in report["summary"].items())]
     for finding in report["findings"]:
         lines.extend([f"[{finding['status'].upper()}] {finding['check_id']} ({finding['severity']}): {finding['title']}",
-                      f"  Evidence ({finding['source']}): {json.dumps(finding['evidence'], sort_keys=True)}",
-                      f"  {finding['reason']}", f"  Review: {finding['remediation']}",
-                      f"  Limit: {finding['limitation']}"])
+                      f"  Данные ({finding['source']}): {json.dumps(finding['evidence'], sort_keys=True)}",
+                      f"  {finding['reason']}", f"  Рекомендация: {finding['remediation']}",
+                      f"  Ограничение: {finding['limitation']}"])
     return "\n".join(lines) + "\n"
