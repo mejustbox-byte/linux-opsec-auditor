@@ -1,0 +1,71 @@
+{
+  "collected_at": "2026-10-09T00:00:00Z",
+  "observations": {
+    "backups": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "containers": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "drift": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "files": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "kernel": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "logs": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "lsm": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "pam": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "patches": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "ssh": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "sudo": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    },
+    "systemd": {
+      "source": "synthetic",
+      "state": "unavailable",
+      "values": {}
+    }
+  },
+  "platform": {
+    "architecture": "x86_64",
+    "family": "ubuntu",
+    "version": "24.04"
+  },
+  "schema_version": 1
+}

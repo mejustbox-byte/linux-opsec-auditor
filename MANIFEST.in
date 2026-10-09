@@ -1,0 +1,10 @@
+include requirements-build.lock
+include SECURITY.md
+include LICENSE
+recursive-include docs *.md
+recursive-include fixtures *.json
+recursive-include schemas *.json
+recursive-include tests *.py
+recursive-include tools *.py
+recursive-include .github *.yml
+recursive-include tools *.sh

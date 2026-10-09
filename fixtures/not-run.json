@@ -1,0 +1,71 @@
+{
+  "collected_at": "2026-10-09T00:00:00Z",
+  "observations": {
+    "backups": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "containers": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "drift": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "files": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "kernel": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "logs": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "lsm": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "pam": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "patches": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "ssh": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "sudo": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    },
+    "systemd": {
+      "source": "synthetic",
+      "state": "not_run",
+      "values": {}
+    }
+  },
+  "platform": {
+    "architecture": "x86_64",
+    "family": "ubuntu",
+    "version": "24.04"
+  },
+  "schema_version": 1
+}

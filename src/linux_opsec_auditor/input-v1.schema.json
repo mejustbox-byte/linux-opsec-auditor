@@ -1,0 +1,564 @@
+{
+  "$id": "https://github.com/mejustbox-byte/linux-opsec-auditor/input-v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "collected_at": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "type": "string"
+    },
+    "observations": {
+      "additionalProperties": false,
+      "properties": {
+        "backups": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "age_hours": {
+                  "maximum": 1000000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "restore_verified": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "containers": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "complete": {
+                  "type": "boolean"
+                },
+                "host_mounts": {
+                  "type": "boolean"
+                },
+                "privileged": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "drift": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "baseline_approved": {
+                  "type": "boolean"
+                },
+                "baseline_sha256": {
+                  "pattern": "^[a-f0-9]{64}$",
+                  "type": "string"
+                },
+                "current_sha256": {
+                  "pattern": "^[a-f0-9]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "files": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "complete": {
+                  "type": "boolean"
+                },
+                "group_world_writable": {
+                  "type": "boolean"
+                },
+                "root_owned": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "kernel": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "advisory_current": {
+                  "type": "boolean"
+                },
+                "patched": {
+                  "type": "boolean"
+                },
+                "reboot_required": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "logs": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "audit_active": {
+                  "type": "boolean"
+                },
+                "delivery_verified": {
+                  "type": "boolean"
+                },
+                "persistent_journal": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "lsm": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "apparmor_enforcing": {
+                  "type": "boolean"
+                },
+                "host_context": {
+                  "type": "boolean"
+                },
+                "selinux": {
+                  "enum": [
+                    "enforcing",
+                    "permissive",
+                    "disabled",
+                    "unavailable"
+                  ]
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "pam": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "bypass": {
+                  "type": "boolean"
+                },
+                "complete": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "patches": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "feed_current": {
+                  "type": "boolean"
+                },
+                "security_updates_pending": {
+                  "maximum": 1000000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "support_active": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "ssh": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "effective": {
+                  "type": "boolean"
+                },
+                "password_auth": {
+                  "type": "boolean"
+                },
+                "permit_root": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "sudo": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "complete": {
+                  "type": "boolean"
+                },
+                "unrestricted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        },
+        "systemd": {
+          "additionalProperties": false,
+          "properties": {
+            "source": {
+              "enum": [
+                "synthetic",
+                "operator",
+                "static",
+                "runtime"
+              ]
+            },
+            "state": {
+              "enum": [
+                "observed",
+                "unavailable",
+                "not_run"
+              ]
+            },
+            "values": {
+              "additionalProperties": false,
+              "properties": {
+                "no_new_privileges": {
+                  "type": "boolean"
+                },
+                "private_tmp": {
+                  "type": "boolean"
+                },
+                "protect_system": {
+                  "type": "boolean"
+                }
+              },
+              "required": [],
+              "type": "object"
+            }
+          },
+          "required": [
+            "state",
+            "source",
+            "values"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "platform": {
+      "additionalProperties": false,
+      "properties": {
+        "architecture": {
+          "enum": [
+            "x86_64",
+            "aarch64",
+            "other"
+          ]
+        },
+        "family": {
+          "enum": [
+            "ubuntu",
+            "debian",
+            "rhel",
+            "other"
+          ]
+        },
+        "version": {
+          "pattern": "^[0-9]{1,2}(\\.[0-9]{1,2})?$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "family",
+        "version",
+        "architecture"
+      ],
+      "type": "object"
+    },
+    "schema_version": {
+      "const": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "collected_at",
+    "platform",
+    "observations"
+  ],
+  "type": "object"
+}
